@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helios Marathon Plan & Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #292524; /* stone-800 */
+        }
+        .main-container {
+            background-color: #ffffff; /* white */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
+        }
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            font-weight: 500;
+        }
+        .nav-button.active {
+            background-color: #0284c7; /* sky-600 */
+            color: white;
+        }
+        .nav-button:not(.active):hover {
+            background-color: #e0f2fe; /* sky-100 */
+            color: #0369a1; /* sky-700 */
+        }
+        .phase-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #0ea5e9; /* sky-500 */
+            color: #0369a1; /* sky-700 */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            font-weight: 500;
+        }
+        .phase-button.active {
+            background-color: #0ea5e9; /* sky-500 */
+            color: white;
+        }
+        .phase-button:not(.active):hover {
+            background-color: #e0f2fe; /* sky-100 */
+        }
+        .week-button {
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #9ca3af; /* gray-400 */
+            color: #374151; /* gray-700 */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+            font-weight: 500;
+            text-align: center;
+        }
+        .week-button.active {
+            background-color: #0d9488; /* teal-600 */
+            color: white;
+            border-color: #0d9488; /* teal-600 */
+        }
+        .week-button:not(.active):hover {
+            background-color: #f0fdfa; /* teal-50 */
+            border-color: #14b8a6; /* teal-500 */
+        }
+        .content-card {
+            background-color: #fafaf9; /* stone-50 */
+            padding: 1rem; /* p-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 1px solid #e7e5e4; /* stone-200 */
+        }
+        .content-card h3 {
+            color: #0d9488; /* teal-600 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .data-table {
+             width: 100%;
+             margin-top: 0.5rem;
+             border-collapse: collapse;
+             font-size: 0.875rem;
+        }
+         .data-table th, .data-table td {
+             border: 1px solid #d1d5db;
+             padding: 0.5rem;
+             text-align: left;
+        }
+         .data-table th {
+            font-weight: 600;
+            background-color: #f3f4f6; /* gray-100 */
+        }
+         input[type="text"]:focus, input[type="number"]:focus {
+             outline: 2px solid transparent;
+             outline-offset: 2px;
+             border-color: #0ea5e9; /* sky-500 */
+             box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+         }
+         .header-logo-container {
+             display: inline-block;
+             padding: 0.75rem;
+             background-color: #0284c7; /* sky-600 */
+             border-radius: 0.5rem;
+         }
+         .header-logo {
+             max-height: 50px;
+             display: block;
+         }
+         ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; /* slate-300 */
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-500 */
+        }
+        /* Loading and Error Message Styles */
+        #loading-message, #error-message {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 500; /* medium */
+        }
+        #loading-message {
+            color: #0369a1; /* sky-700 */
+        }
+        #error-message {
+            color: #dc2626; /* red-600 */
+            background-color: #fee2e2; /* red-100 */
+            border: 1px solid #f87171; /* red-400 */
+            border-radius: 0.5rem; /* rounded-lg */
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 py-8">
+    <div class="main-container w-full max-w-5xl mx-auto p-6 sm:p-8">
+        <header class="mb-6 sm:mb-8 text-center">
+            <div class="header-logo-container">
+                <img src="https://iliosports.com/wp-content/uploads/2021/03/logo-13.png"
+                     alt="Helios Running Team Logo"
+                     class="header-logo"
+                     onerror="this.parentElement.innerHTML='<h1 class=\'text-2xl sm:text-3xl font-bold text-white\'>Helios Running</h1>'">
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 mt-4">Marathon Plan & Training Tools</h1>
+            <p class="text-stone-600">Your interactive guide to marathon training and pace utilities.</p>
+        </header>
+
+        <nav class="mb-8 flex flex-wrap justify-center gap-2 sm:gap-4 border-b border-stone-300 pb-4">
+            <button id="nav-overview" class="nav-button active">Plan Overview</button>
+            <button id="nav-plan" class="nav-button">Training Plan</button>
+            <button id="nav-utils" class="nav-button">Pace Utilities</button>
+        </nav>
+
+        <main id="app-content">
+            <div id="loading-message">
+                <svg class="animate-spin h-8 w-8 text-sky-600 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                Loading training plan data from Google Sheet...
+            </div>
+            <div id="error-message" class="hidden"></div>
+            </main>
+    </div>
+
+<script>
+// --- Configuration ---
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUePACew4T4yiaL5oRqXSobZHb6m-ONujQirZoARs4t7ILJpRbjAz-N1HLtOPZKw-/exec'; // UPDATED URL
+
+// --- Global Variables ---
+let marathonPlan = null; 
+const appContent = document.getElementById('app-content');
+const loadingMessageDiv = document.getElementById('loading-message');
+const errorMessageDiv = document.getElementById('error-message');
+let mileageChartInstance = null;
+
+// --- Data Fetching and Initialization ---
+async function fetchMarathonPlan() {
+    try {
+        const response = await fetch(WEB_APP_URL);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Network response was not ok: ${response.status} ${response.statusText}. Details: ${errorText}`);
+        }
+        const data = await response.json();
+        if (data.error) {
+            throw new Error(`Error from Google Sheet App: ${data.error}`);
+        }
+        // Basic validation of the fetched data structure
+        if (!data.philosophy || !data.philosophy.title || !Array.isArray(data.philosophy.content) ||
+            !data.paceGuide || !data.paceGuide.title || !Array.isArray(data.paceGuide.paces) ||
+            !data.generalNotes || !data.generalNotes.title || !Array.isArray(data.generalNotes.notes) ||
+            !Array.isArray(data.phases)) {
+            console.error("Fetched data is missing essential properties or has an unexpected structure:", data);
+            throw new Error("Fetched data is incomplete. Check Apps Script `doGet` and Google Sheet structure.");
+        }
+        marathonPlan = data; 
+        initializeApp(); 
+    } catch (error) {
+        console.error('Failed to fetch marathon plan:', error);
+        if(loadingMessageDiv) loadingMessageDiv.classList.add('hidden');
+        if(errorMessageDiv) {
+            errorMessageDiv.textContent = `Error loading training plan: ${error.message}. Please ensure the Google Sheet is accessible and the Apps Script is deployed correctly (check 'Who has access' is 'Anyone'). You might need to check the Apps Script logs for more details.`;
+            errorMessageDiv.classList.remove('hidden');
+        }
+    }
+}
+
+function initializeApp() {
+    if(loadingMessageDiv) loadingMessageDiv.classList.add('hidden');
+    if(errorMessageDiv) errorMessageDiv.classList.add('hidden');
+    if(appContent) appContent.innerHTML = ''; 
+
+    document.getElementById('nav-overview').addEventListener('click', renderOverview);
+    document.getElementById('nav-plan').addEventListener('click', renderTrainingPlan);
+    document.getElementById('nav-utils').addEventListener('click', renderPaceUtilities);
+    
+    renderOverview(); 
+}
+
+function setActiveNav(activeId) {
+    document.querySelectorAll('.nav-button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.id === activeId) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+function createHtmlList(items) {
+    if (!items || !Array.isArray(items)) return ''; 
+    return `<ul class="list-disc list-inside space-y-1 text-stone-700">${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
+}
+
+function renderOverview() {
+    if (!marathonPlan) return; 
+    setActiveNav('nav-overview');
+    
+    appContent.innerHTML = ''; 
+
+    const overviewSection = document.createElement('section');
+    overviewSection.id = "overview-content";
+    overviewSection.className = "space-y-6";
+
+    overviewSection.innerHTML = `
+        <div class="content-card">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.philosophy.title || 'Training Philosophy'}</h2>
+            ${createHtmlList(marathonPlan.philosophy.content)}
+        </div>
+
+        <div class="content-card">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">Overall Mileage Progression</h2>
+            <div class="chart-container bg-white p-2 rounded-md shadow">
+                <canvas id="mileageChart"></canvas>
+            </div>
+            <p class="text-xs text-stone-500 mt-2 text-center">Hover over points to see weekly mileage. Data sourced from "Mileage Data" sheet.</p>
+        </div>
+
+        <div class="content-card">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.paceGuide.title || 'Pace Guide'}</h2>
+            ${createHtmlList(marathonPlan.paceGuide.paces)}
+        </div>
+
+        <div class="content-card">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.generalNotes.title || 'Important Notes'}</h2>
+            ${createHtmlList(marathonPlan.generalNotes.notes)}
+        </div>
+    `;
+    appContent.appendChild(overviewSection);
+    renderMileageChart();
+}
+
+function renderMileageChart() {
+    if (!marathonPlan || !marathonPlan.phases) {
+        console.warn("Mileage chart: marathonPlan or phases data not available.");
+        return;
+    }
+    const chartCanvas = document.getElementById('mileageChart');
+    if (!chartCanvas) {
+        return;
+    }
+
+    const labels = [];
+    const dataPoints = [];
+    
+    marathonPlan.phases.forEach(phase => {
+        if (!phase.weeks || !Array.isArray(phase.weeks)) {
+            console.warn("Phase missing weeks array for chart:", phase.name);
+            return; 
+        }
+        phase.weeks.forEach(week => {
+            labels.push(`W${week.weekNum}`);
+            let kmValue = typeof week.chartKm === 'number' ? week.chartKm : 0;
+            if (typeof week.chartKm !== 'number' && typeof week.totalKm === 'string') { 
+                const match = week.totalKm.match(/(\d+)/); 
+                if (match) kmValue = parseInt(match[1], 10);
+            } else if (typeof week.chartKm !== 'number' && typeof week.totalKm === 'number') {
+                 kmValue = week.totalKm;
+            }
+            dataPoints.push(kmValue);
+        });
+    });
+
+    if (mileageChartInstance) {
+        mileageChartInstance.destroy();
+    }
+
+    mileageChartInstance = new Chart(chartCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Planned Weekly Kilometers',
+                data: dataPoints,
+                borderColor: '#0d9488', 
+                backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                tension: 0.1,
+                fill: true,
+                pointBackgroundColor: '#0d9488',
+                pointBorderColor: '#fff',
+                pointHoverRadius: 7,
+                pointHoverBackgroundColor: '#0d9488'
+            }]
+        },
+        options: { 
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Kilometers (km)', font: { weight: '500' } } },
+                x: { title: { display: true, text: 'Training Week', font: { weight: '500' } }, ticks: { autoSkip: true, maxTicksLimit: 20, callback: function(v,i,vals){ return this.getLabelForValue(v);}} }
+            },
+            plugins: {
+                tooltip: { enabled: true, mode: 'index', intersect: false, backgroundColor: 'rgba(0,0,0,0.8)', titleFont: { weight: 'bold' }, callbacks: { label: function(ctx) { return `${ctx.dataset.label}: ${ctx.parsed.y} km`; } } },
+                legend: { labels: { font: { weight: '500' } } }
+            }
+        }
+    });
+}
+
+function renderTrainingPlan() {
+    if (!marathonPlan) return;
+    setActiveNav('nav-plan');
+    appContent.innerHTML = ''; 
+
+    const trainingPlanSection = document.createElement('section');
+    trainingPlanSection.id = "training-plan-content";
+    trainingPlanSection.className = "space-y-6";
+
+    const phaseButtonsHtml = marathonPlan.phases.map((phase, index) =>
+        `<button class="phase-button" data-phase-index="${index}">${phase.name}</button>`
+    ).join('');
+
+    trainingPlanSection.innerHTML = `
+        <div>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Select Training Phase:</h2>
+            <div id="phase-navigation" class="flex flex-wrap gap-2 mb-6">
+                ${phaseButtonsHtml}
+            </div>
+            <div id="phase-details" class="space-y-4">
+                <p class="text-stone-600 italic">Select a phase to see its details and weekly breakdown.</p>
+            </div>
+        </div>
+        <div id="week-details-container" class="mt-6"></div>
+    `;
+    appContent.appendChild(trainingPlanSection);
+
+    document.querySelectorAll('#phase-navigation .phase-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            document.querySelectorAll('#phase-navigation .phase-button').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            const phaseIndex = parseInt(e.target.dataset.phaseIndex);
+            renderPhaseDetails(phaseIndex);
+        });
+    });
+    if (marathonPlan.phases && marathonPlan.phases.length > 0) {
+        const firstPhaseButton = document.querySelector('#phase-navigation .phase-button');
+        if (firstPhaseButton) {
+            firstPhaseButton.classList.add('active');
+            renderPhaseDetails(0);
+        }
+    }
+}
+
+function renderPhaseDetails(phaseIndex) {
+    if (!marathonPlan) return;
+    const phase = marathonPlan.phases[phaseIndex];
+    if (!phase) {
+        console.error("Phase not found for index:", phaseIndex);
+        const phaseDetailsDiv = document.getElementById('phase-details');
+        if(phaseDetailsDiv) phaseDetailsDiv.innerHTML = '<p class="text-red-500">Error: Could not load phase details.</p>';
+        return;
+    }
+    const phaseDetailsDiv = document.getElementById('phase-details');
+    const weekDetailsContainer = document.getElementById('week-details-container');
+    if(weekDetailsContainer) weekDetailsContainer.innerHTML = ''; 
+
+    const weekButtonsHtml = (phase.weeks && Array.isArray(phase.weeks)) ? phase.weeks.map((week, index) =>
+        `<button class="week-button" data-phase-index="${phaseIndex}" data-week-index="${index}">Week ${week.weekNum}</button>`
+    ).join('') : '<p>No weeks available for this phase.</p>';
+
+    if(phaseDetailsDiv) phaseDetailsDiv.innerHTML = `
+        <div class="content-card">
+            <h3 class="text-lg sm:text-xl font-semibold mb-2">${phase.name} (${phase.duration || 'N/A'})</h3>
+            <p class="text-sm text-stone-600 mb-1"><strong>Goal:</strong> ${phase.goal || 'N/A'}</p>
+            <p class="text-sm text-stone-600 mb-3"><strong>Mileage Range:</strong> ${phase.mileageRange || 'N/A'}</p>
+            <h4 class="text-md font-medium text-stone-700 mb-2">Select a Week:</h4>
+            <div id="week-navigation-${phaseIndex}" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">
+                ${weekButtonsHtml}
+            </div>
+        </div>
+    `;
+
+    document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(button => {
+        button.addEventListener('click', (e) => {
+            document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+            const pIdx = parseInt(e.target.dataset.phaseIndex);
+            const wIdx = parseInt(e.target.dataset.weekIndex);
+            renderWeekDetails(pIdx, wIdx);
+        });
+    });
+
+    if (phase.weeks && phase.weeks.length > 0) {
+        const firstWeekButton = document.querySelector(`#week-navigation-${phaseIndex} .week-button`);
+        if (firstWeekButton) {
+            firstWeekButton.classList.add('active');
+            renderWeekDetails(phaseIndex, 0);
+        }
+    }
+}
+
+function renderWeekDetails(phaseIndex, weekIndex) {
+    if (!marathonPlan) return;
+    const week = marathonPlan.phases[phaseIndex]?.weeks[weekIndex]; 
+    if (!week) {
+        console.error("Week not found for phase index:", phaseIndex, "week index:", weekIndex);
+        const weekDetailsContainer = document.getElementById('week-details-container');
+        if(weekDetailsContainer) weekDetailsContainer.innerHTML = '<p class="text-red-500">Error: Could not load week details.</p>';
+        return;
+    }
+    const weekDetailsContainer = document.getElementById('week-details-container');
+
+    const dailyScheduleHtml = (week.days && Array.isArray(week.days)) ? week.days.map(day => {
+        const parts = day.split(':');
+        return `<li class="py-1"><strong class="text-teal-700">${parts[0]}:</strong> ${parts.slice(1).join(':').trim()}</li>`;
+    }).join('') : '<li>No daily schedule available.</li>';
+
+    if(weekDetailsContainer) weekDetailsContainer.innerHTML = `
+        <div class="content-card mt-4">
+            <h4 class="text-lg font-semibold text-sky-700 mb-2">Schedule for Week ${week.weekNum}</h4>
+            <p class="text-sm text-stone-600 mb-1"><strong>Total Mileage (Display String):</strong> ${week.totalKm || 'N/A'}</p>
+            <ul class="list-none space-y-1 text-sm text-stone-700 mb-2">
+                ${dailyScheduleHtml}
+            </ul>
+            ${week.notes ? `<p class="text-sm text-stone-600 italic mt-2"><strong>Notes:</strong> ${week.notes}</p>` : ''}
+        </div>
+    `;
+}
+
+function renderPaceUtilities() {
+    setActiveNav('nav-utils');
+    appContent.innerHTML = ''; 
+
+    const paceUtilsSection = document.createElement('section');
+    paceUtilsSection.id = "pace-utils-content";
+    paceUtilsSection.className = "space-y-6";
+
+    paceUtilsSection.innerHTML = `
+        <div class="content-card">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Training Zone & Repeats Pace Calculator</h2>
+            <div class="mb-6">
+                <label for="lt2speed" class="block text-sm font-medium text-stone-700 mb-1">Enter LT2 Speed (pace per km):</label>
+                <input type="text" id="lt2speed" name="lt2speed" placeholder="e.g., 4:30"
+                       class="mt-1 block w-full px-4 py-3 border border-stone-300 rounded-lg shadow-sm sm:text-sm transition duration-150 ease-in-out">
+                <div id="error-message-calc" class="text-red-500 text-sm mt-2 h-5"></div>
+            </div>
+
+            <button onclick="calculatePacesFromUtil()"
+                    class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 transition duration-150 ease-in-out transform hover:scale-105">
+                Calculate Zones & Repeats Paces
+            </button>
+
+            <div class="mt-8 md:flex md:space-x-6">
+                <div id="zones-section-util" class="flex-1">
+                    <h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Training Zones:</h3>
+                    <div id="zones-content-util">
+                        <p class="text-stone-500 italic text-sm">Enter your LT2 speed and click calculate.</p>
+                    </div>
+                </div>
+
+                <div id="repeats-section-util" class="flex-1 mt-8 md:mt-0">
+                    <h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Repeats Paces:</h3>
+                    <div id="repeats-content-util">
+                        <p class="text-stone-500 italic text-sm">Calculated based on your LT2 speed.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    appContent.appendChild(paceUtilsSection);
+
+     document.getElementById('lt2speed').addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); 
+            calculatePacesFromUtil();
+        }
+    });
+}
+
+function parsePaceToSeconds(paceString) { 
+    if (!paceString || typeof paceString !== 'string') return NaN;
+    const parts = paceString.trim().split(':');
+    if (parts.length !== 2) return NaN;
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    if (isNaN(minutes) || isNaN(seconds) || minutes < 0 || seconds < 0 || seconds >= 60) return NaN;
+    return (minutes * 60) + seconds;
+}
+function formatSecondsToPace(totalSeconds) { 
+    if (isNaN(totalSeconds) || totalSeconds < 0) return "N/A";
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.round(totalSeconds % 60); 
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+function calculatePacesFromUtil() { 
+    const lt2SpeedInput = document.getElementById('lt2speed').value;
+    const zonesContentDiv = document.getElementById('zones-content-util');
+    const repeatsContentDiv = document.getElementById('repeats-content-util');
+    const errorMessageDivCalc = document.getElementById('error-message-calc');
+
+    zonesContentDiv.innerHTML = '<p class="text-stone-500 italic text-sm">Calculating...</p>';
+    repeatsContentDiv.innerHTML = '<p class="text-stone-500 italic text-sm">Calculating...</p>';
+    if(errorMessageDivCalc) errorMessageDivCalc.textContent = ''; 
+
+    const lt2SpeedInSeconds = parsePaceToSeconds(lt2SpeedInput);
+
+    if (isNaN(lt2SpeedInSeconds) || lt2SpeedInSeconds <= 0) {
+        if(errorMessageDivCalc) errorMessageDivCalc.textContent = 'Invalid LT2 speed. Use mm:ss format (e.g., 4:30). Pace must be positive.';
+        zonesContentDiv.innerHTML = '<p class="text-red-500 italic text-sm">Could not calculate zones due to invalid input.</p>';
+        repeatsContentDiv.innerHTML = '<p class="text-red-500 italic text-sm">Could not calculate repeats paces due to invalid LT2 input.</p>';
+        return;
+    }
+
+    const zonesData = [
+        { name: "Zone 1", descriptor: "Easy/Recovery", lowPaceFactor: 1.54, highPaceFactor: 1.33, colorClass: "text-green-600" }, 
+        { name: "Zone 2", descriptor: "Aerobic/Base", lowPaceFactor: 1.32, highPaceFactor: 1.16, colorClass: "text-sky-600" }, 
+        { name: "Zone 3", descriptor: "Tempo/Marathon", lowPaceFactor: 1.15, highPaceFactor: 1.01, colorClass: "text-lime-600" }, 
+        { name: "Zone 4", descriptor: "Threshold", lowPaceFactor: 1.00, highPaceFactor: 0.91, colorClass: "text-amber-500" }, 
+        { name: "Zone 5", descriptor: "VO2 Max", lowPaceFactor: 0.90, highPaceFactor: 0.83, colorClass: "text-red-600" } 
+    ];
+    const racePaceInfo = { name: "Marathon Pace (Est.)", descriptor: "", lowPaceFactor: 1.15, highPaceFactor: 1.10, colorClass: "text-purple-600" };
+
+
+    zonesContentDiv.innerHTML = ''; 
+    const zonesTable = document.createElement('table');
+    zonesTable.classList.add('data-table', 'text-sm', 'w-full');
+    zonesTable.innerHTML = `<thead><tr><th class="bg-stone-100 text-left p-2">Zone</th><th class="bg-stone-100 text-left p-2">Pace Range (/km)</th></tr></thead><tbody></tbody>`;
+    const zonesTbody = zonesTable.querySelector('tbody');
+
+    [...zonesData, racePaceInfo].forEach(zone => {
+        const slowerPaceSeconds = lt2SpeedInSeconds * zone.lowPaceFactor;
+        const fasterPaceSeconds = lt2SpeedInSeconds * zone.highPaceFactor;
+        
+        const row = zonesTbody.insertRow();
+        row.insertCell().innerHTML = `<strong class="${zone.colorClass}">${zone.name} ${zone.descriptor ? '['+zone.descriptor+']' : ''}</strong>`;
+        row.insertCell().textContent = `${formatSecondsToPace(fasterPaceSeconds)} - ${formatSecondsToPace(slowerPaceSeconds)}`;
+    });
+    zonesContentDiv.appendChild(zonesTable);
+    zonesContentDiv.insertAdjacentHTML('beforeend', '<p class="text-xs text-stone-500 mt-2">Pace factors are estimates. Adjust based on feel and specific training goals.</p>');
+
+    const repeatDistances = [
+        { distance: "3000m", paceFactor: 1.02 }, 
+        { distance: "1600m (Mile)", paceFactor: 0.98 }, 
+        { distance: "1000m", paceFactor: 0.95 },
+        { distance: "800m",  paceFactor: 0.92 },
+        { distance: "400m",  paceFactor: 0.88 },
+        { distance: "200m",  paceFactor: 0.85 }
+    ];
+
+    repeatsContentDiv.innerHTML = ''; 
+    const repeatsTable = document.createElement('table');
+    repeatsTable.classList.add('data-table', 'text-sm', 'w-full');
+    repeatsTable.innerHTML = `<thead><tr><th class="bg-stone-100 text-left p-2">Distance</th><th class="bg-stone-100 text-left p-2">Target Time per Repeat</th><th class="bg-stone-100 text-left p-2">Equivalent Pace (/km)</th></tr></thead><tbody></tbody>`;
+    const repeatsTbody = repeatsTable.querySelector('tbody');
+
+    repeatDistances.forEach(item => {
+        const targetPacePerKmSeconds = lt2SpeedInSeconds * item.paceFactor;
+        
+        let distanceMultiplier = 1; 
+        if (item.distance === "3000m") distanceMultiplier = 3;
+        else if (item.distance === "1600m (Mile)") distanceMultiplier = 1.60934; 
+        else if (item.distance === "1000m") distanceMultiplier = 1;
+        else if (item.distance === "800m") distanceMultiplier = 0.8;
+        else if (item.distance === "400m") distanceMultiplier = 0.4;
+        else if (item.distance === "200m") distanceMultiplier = 0.2;
+
+        const targetTimeForDistanceSeconds = targetPacePerKmSeconds * distanceMultiplier;
+
+        const row = repeatsTbody.insertRow();
+        row.insertCell().innerHTML = `<strong class="text-teal-700">${item.distance}</strong>`;
+        row.insertCell().textContent = formatSecondsToPace(targetTimeForDistanceSeconds);
+        row.insertCell().textContent = formatSecondsToPace(targetPacePerKmSeconds);
+    });
+    repeatsContentDiv.appendChild(repeatsTable);
+    repeatsContentDiv.insertAdjacentHTML('beforeend', '<p class="text-xs text-stone-500 mt-2">Target times are estimates. Adjust based on the number of reps and recovery.</p>');
+}
+
+// --- Initial Load ---
+fetchMarathonPlan();
+// Script end
+</script>
+</body>
+</html>
