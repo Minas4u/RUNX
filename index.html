@@ -32,21 +32,72 @@
             background-color: #e0f2fe; /* sky-100 */
             color: #0369a1; /* sky-700 */
         }
+
+        /* Default Phase Button Styles (will be overridden by specific phase styles) */
         .phase-button {
             padding: 0.5rem 1rem;
             border-radius: 0.375rem; /* rounded-md */
-            border: 1px solid #0ea5e9; /* sky-500 */
-            color: #0369a1; /* sky-700 */
+            border-width: 1px;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
             font-weight: 500;
         }
-        .phase-button.active {
+
+        /* Preseason Button Styles */
+        .phase-button-preseason {
+            border-color: #d1d5db; /* gray-300 */
+            color: #4b5563; /* gray-600 */
+        }
+        .phase-button-preseason:hover:not(.active) {
+            background-color: #f3f4f6; /* gray-100 */
+        }
+        .phase-button-preseason.active {
+            background-color: #6b7280; /* gray-500 */
+            color: white;
+            border-color: #6b7280; /* gray-500 */
+        }
+
+        /* Base Building Button Styles (Original Sky) */
+        .phase-button-base {
+            border-color: #0ea5e9; /* sky-500 */
+            color: #0369a1; /* sky-700 */
+        }
+        .phase-button-base:hover:not(.active) {
+            background-color: #e0f2fe; /* sky-100 */
+        }
+        .phase-button-base.active {
             background-color: #0ea5e9; /* sky-500 */
             color: white;
         }
-        .phase-button:not(.active):hover {
-            background-color: #e0f2fe; /* sky-100 */
+
+        /* Marathon Specific Button Styles (Green) */
+        .phase-button-specific {
+            border-color: #10b981; /* green-500 */
+            color: #047857; /* green-700 */
         }
+        .phase-button-specific:hover:not(.active) {
+            background-color: #d1fae5; /* green-100 */
+        }
+        .phase-button-specific.active {
+            background-color: #059669; /* green-600 */
+            color: white;
+            border-color: #059669; /* green-600 */
+        }
+
+        /* Taper Button Styles (Red) */
+        .phase-button-taper {
+            border-color: #ef4444; /* red-500 */
+            color: #b91c1c; /* red-700 */
+        }
+        .phase-button-taper:hover:not(.active) {
+            background-color: #fee2e2; /* red-100 */
+        }
+        .phase-button-taper.active {
+            background-color: #dc2626; /* red-600 */
+            color: white;
+            border-color: #dc2626; /* red-600 */
+        }
+
+
         .week-button {
             padding: 0.5rem 0.75rem;
             border-radius: 0.375rem;
@@ -71,7 +122,7 @@
             border-radius: 0.5rem; /* rounded-lg */
             border: 1px solid #e7e5e4; /* stone-200 */
         }
-        .content-card h3 {
+        .content-card h3 { 
             color: #0d9488; /* teal-600 */
         }
         .chart-container {
@@ -88,14 +139,14 @@
                 height: 350px;
             }
         }
-        .data-table {
+        .data-table { 
              width: 100%;
              margin-top: 0.5rem;
              border-collapse: collapse;
              font-size: 0.875rem;
         }
          .data-table th, .data-table td {
-             border: 1px solid #d1d5db;
+             border: 1px solid #d1d5db; /* gray-300 */
              padding: 0.5rem;
              text-align: left;
         }
@@ -103,6 +154,34 @@
             font-weight: 600;
             background-color: #f3f4f6; /* gray-100 */
         }
+        .schedule-table { 
+            width: 100%;
+            margin-top: 0.75rem; /* my-3 */
+            border-collapse: collapse;
+            font-size: 0.875rem; /* text-sm */
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow: hidden; 
+        }
+        .schedule-table th, .schedule-table td {
+            padding: 0.75rem; /* p-3 */
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb; /* gray-200 */
+        }
+        .schedule-table th {
+            background-color: #f9fafb; /* gray-50 */
+            color: #374151; /* gray-700 */
+            font-weight: 600; /* font-semibold */
+        }
+        .schedule-table tr:last-child td {
+            border-bottom: none;
+        }
+        .schedule-table td:first-child { 
+            font-weight: 500; /* medium */
+            width: 25%; 
+             max-width: 100px;
+        }
+
          input[type="text"]:focus, input[type="number"]:focus {
              outline: 2px solid transparent;
              outline-offset: 2px;
@@ -133,7 +212,6 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8; /* slate-500 */
         }
-        /* Loading and Error Message Styles */
         #loading-message, #error-message {
             text-align: center;
             padding: 2rem;
@@ -184,7 +262,7 @@
 
 <script>
 // --- Configuration ---
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUePACew4T4yiaL5oRqXSobZHb6m-ONujQirZoARs4t7ILJpRbjAz-N1HLtOPZKw-/exec'; // UPDATED URL
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUePACew4T4yiaL5oRqXSobZHb6m-ONujQirZoARs4t7ILJpRbjAz-N1HLtOPZKw-/exec';
 
 // --- Global Variables ---
 let marathonPlan = null; 
@@ -205,7 +283,6 @@ async function fetchMarathonPlan() {
         if (data.error) {
             throw new Error(`Error from Google Sheet App: ${data.error}`);
         }
-        // Basic validation of the fetched data structure
         if (!data.philosophy || !data.philosophy.title || !Array.isArray(data.philosophy.content) ||
             !data.paceGuide || !data.paceGuide.title || !Array.isArray(data.paceGuide.paces) ||
             !data.generalNotes || !data.generalNotes.title || !Array.isArray(data.generalNotes.notes) ||
@@ -356,6 +433,15 @@ function renderMileageChart() {
     });
 }
 
+function getPhaseButtonClass(phaseName) {
+    const nameLower = phaseName.toLowerCase();
+    if (nameLower.includes("preseason")) return "phase-button-preseason";
+    if (nameLower.includes("base")) return "phase-button-base";
+    if (nameLower.includes("specific")) return "phase-button-specific";
+    if (nameLower.includes("taper")) return "phase-button-taper";
+    return "phase-button-base"; // Default
+}
+
 function renderTrainingPlan() {
     if (!marathonPlan) return;
     setActiveNav('nav-plan');
@@ -365,9 +451,10 @@ function renderTrainingPlan() {
     trainingPlanSection.id = "training-plan-content";
     trainingPlanSection.className = "space-y-6";
 
-    const phaseButtonsHtml = marathonPlan.phases.map((phase, index) =>
-        `<button class="phase-button" data-phase-index="${index}">${phase.name}</button>`
-    ).join('');
+    const phaseButtonsHtml = marathonPlan.phases.map((phase, index) => {
+        const buttonClass = getPhaseButtonClass(phase.name);
+        return `<button class="phase-button ${buttonClass}" data-phase-index="${index}">${phase.name}</button>`
+    }).join('');
 
     trainingPlanSection.innerHTML = `
         <div>
@@ -385,20 +472,55 @@ function renderTrainingPlan() {
 
     document.querySelectorAll('#phase-navigation .phase-button').forEach(button => {
         button.addEventListener('click', (e) => {
+            // Remove active from all phase buttons first
             document.querySelectorAll('#phase-navigation .phase-button').forEach(btn => btn.classList.remove('active'));
+            // Then add active to the clicked one
             e.target.classList.add('active');
             const phaseIndex = parseInt(e.target.dataset.phaseIndex);
             renderPhaseDetails(phaseIndex);
         });
     });
+
     if (marathonPlan.phases && marathonPlan.phases.length > 0) {
         const firstPhaseButton = document.querySelector('#phase-navigation .phase-button');
         if (firstPhaseButton) {
-            firstPhaseButton.classList.add('active');
-            renderPhaseDetails(0);
+            firstPhaseButton.classList.add('active'); // Activate the first button
+            renderPhaseDetails(0); // Render details for the first phase
         }
     }
 }
+
+function formatPhaseDuration(durationString) {
+    if (!durationString || typeof durationString !== 'string') return 'N/A';
+    // Example: "~2.5 Weeks (October 23 - November 9)"
+    //        -> "[2.5 Weeks] (Oct 23 - Nov 9)"
+    const weeksMatch = durationString.match(/(\S+\s+Weeks)/i); // Matches "~X Weeks" or "X Weeks"
+    const dateMatch = durationString.match(/\(([^)]+)\)/);    // Matches content within parentheses
+
+    let weeksPart = "";
+    let datePart = "";
+
+    if (weeksMatch) {
+        weeksPart = `[${weeksMatch[1].replace('~','').trim()}]`;
+    }
+
+    if (dateMatch) {
+        // Shorten month names
+        let dates = dateMatch[1];
+        const monthReplacements = {
+            "January": "Jan", "February": "Feb", "March": "Mar", "April": "Apr",
+            "May": "May", "June": "Jun", "July": "Jul", "August": "Aug",
+            "September": "Sep", "October": "Oct", "November": "Nov", "December": "Dec"
+        };
+        for (const longMonth in monthReplacements) {
+            dates = dates.replace(new RegExp(longMonth, "g"), monthReplacements[longMonth]);
+        }
+        datePart = `(${dates})`;
+    }
+    
+    return `${weeksPart} ${datePart}`.trim();
+}
+
 
 function renderPhaseDetails(phaseIndex) {
     if (!marathonPlan) return;
@@ -416,10 +538,12 @@ function renderPhaseDetails(phaseIndex) {
     const weekButtonsHtml = (phase.weeks && Array.isArray(phase.weeks)) ? phase.weeks.map((week, index) =>
         `<button class="week-button" data-phase-index="${phaseIndex}" data-week-index="${index}">Week ${week.weekNum}</button>`
     ).join('') : '<p>No weeks available for this phase.</p>';
+    
+    const formattedDuration = formatPhaseDuration(phase.duration);
 
     if(phaseDetailsDiv) phaseDetailsDiv.innerHTML = `
         <div class="content-card">
-            <h3 class="text-lg sm:text-xl font-semibold mb-2">${phase.name} (${phase.duration || 'N/A'})</h3>
+            <h3 class="text-lg sm:text-xl font-semibold mb-2">${phase.name} ${formattedDuration}</h3>
             <p class="text-sm text-stone-600 mb-1"><strong>Goal:</strong> ${phase.goal || 'N/A'}</p>
             <p class="text-sm text-stone-600 mb-3"><strong>Mileage Range:</strong> ${phase.mileageRange || 'N/A'}</p>
             <h4 class="text-md font-medium text-stone-700 mb-2">Select a Week:</h4>
@@ -448,6 +572,19 @@ function renderPhaseDetails(phaseIndex) {
     }
 }
 
+function getDisplayKm(totalKmString) {
+    if (!totalKmString || typeof totalKmString !== 'string') return 'N/A';
+    const rangeMatch = totalKmString.match(/(\d+)\s*-\s*(\d+)/);
+    if (rangeMatch) {
+        return `${rangeMatch[2]}km`; 
+    }
+    const singleMatch = totalKmString.match(/(\d+)/);
+    if (singleMatch) {
+        return `${singleMatch[1]}km`;
+    }
+    return totalKmString; 
+}
+
 function renderWeekDetails(phaseIndex, weekIndex) {
     if (!marathonPlan) return;
     const week = marathonPlan.phases[phaseIndex]?.weeks[weekIndex]; 
@@ -459,19 +596,52 @@ function renderWeekDetails(phaseIndex, weekIndex) {
     }
     const weekDetailsContainer = document.getElementById('week-details-container');
 
-    const dailyScheduleHtml = (week.days && Array.isArray(week.days)) ? week.days.map(day => {
-        const parts = day.split(':');
-        return `<li class="py-1"><strong class="text-teal-700">${parts[0]}:</strong> ${parts.slice(1).join(':').trim()}</li>`;
-    }).join('') : '<li>No daily schedule available.</li>';
+    const dayColors = [
+        'bg-red-50',   
+        'bg-orange-50', 
+        'bg-amber-50',  
+        'bg-yellow-50', 
+        'bg-lime-50',   
+        'bg-green-50',  
+        'bg-emerald-50' 
+    ];
+
+    let tableRowsHtml = '';
+    if (week.days && Array.isArray(week.days)) {
+        tableRowsHtml = week.days.map((day, index) => {
+            const parts = day.split(':');
+            const dayName = parts[0].trim();
+            const activity = parts.slice(1).join(':').trim();
+            const bgColor = dayColors[index % dayColors.length]; 
+            return `<tr class="${bgColor}">
+                        <td class="p-3 font-medium text-stone-800">${dayName}</td>
+                        <td class="p-3 text-stone-700">${activity}</td>
+                    </tr>`;
+        }).join('');
+    } else {
+        tableRowsHtml = '<tr><td colspan="2" class="p-3 text-stone-500">No daily schedule available.</td></tr>';
+    }
+
+    const displayKmValue = getDisplayKm(week.totalKm);
 
     if(weekDetailsContainer) weekDetailsContainer.innerHTML = `
         <div class="content-card mt-4">
-            <h4 class="text-lg font-semibold text-sky-700 mb-2">Schedule for Week ${week.weekNum}</h4>
-            <p class="text-sm text-stone-600 mb-1"><strong>Total Mileage (Display String):</strong> ${week.totalKm || 'N/A'}</p>
-            <ul class="list-none space-y-1 text-sm text-stone-700 mb-2">
-                ${dailyScheduleHtml}
-            </ul>
-            ${week.notes ? `<p class="text-sm text-stone-600 italic mt-2"><strong>Notes:</strong> ${week.notes}</p>` : ''}
+            <h4 class="text-lg font-semibold text-sky-700 mb-2">Week ${week.weekNum}</h4>
+            <p class="text-sm text-stone-600 mb-3"><strong>Total Mileage:</strong> ${displayKmValue}</p>
+            <div class="overflow-x-auto rounded-lg border border-stone-200">
+                <table class="schedule-table min-w-full">
+                    <thead>
+                        <tr>
+                            <th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Day</th>
+                            <th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Activity</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-stone-200">
+                        ${tableRowsHtml}
+                    </tbody>
+                </table>
+            </div>
+            ${week.notes ? `<p class="text-sm text-stone-600 italic mt-3 p-3 bg-stone-100 rounded-md"><strong>Notes:</strong> ${week.notes}</p>` : ''}
         </div>
     `;
 }
