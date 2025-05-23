@@ -108,6 +108,7 @@
         .activity-thumbnail-default { background-color: #e0f2fe; color: #0c4a6e; }
 
         #todays-training-card { border-left: 4px solid #0ea5e9; }
+        #this-weeks-plan-card { border-left: 4px solid #10b981; } 
         
         .gemini-response-area {
             margin-top: 1rem; padding: 0.75rem; background-color: #e0f2fe; 
@@ -176,12 +177,7 @@
             border-color: #ef4444; 
             color: #7f1d1d; 
         }
-        #cardiacDriftAiInsightsButton {
-            background-color: #2563eb; 
-        }
-        #cardiacDriftAiInsightsButton:hover {
-            background-color: #1d4ed8; 
-        }
+        
         #cardiacDriftAiResponseArea {
             background-color: #f9fafb; 
             border: 1px solid #e5e7eb; 
@@ -195,6 +191,47 @@
             height: 24px;
             animation: spin 1s linear infinite;
             margin: 10px auto;
+        }
+        .pdf-button {
+            background-color: #f43f5e; 
+            color: white;
+            padding: 0.25rem 0.5rem; 
+            font-size: 0.75rem; 
+            border-radius: 9999px; 
+            font-weight: 500;
+            transition: background-color 0.2s;
+            display: inline-flex; 
+            align-items: center;
+            gap: 0.25rem; 
+        }
+        .pdf-button:hover {
+            background-color: #e11d48; 
+        }
+        .pdf-button svg {
+            width: 0.875rem; 
+            height: 0.875rem; 
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #this-weeks-plan-printable-area, #this-weeks-plan-printable-area * {
+                visibility: visible;
+            }
+            #this-weeks-plan-printable-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .main-container, .content-card {
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .schedule-table th, .schedule-table td {
+                border: 1px solid #ccc !important; 
+            }
         }
 
     </style>
@@ -257,7 +294,11 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
     const loadingIndicator = document.getElementById(loadingElementId);
 
     if (!targetElement || !loadingIndicator) {
-        if (targetElement) targetElement.innerHTML = "<p>Error: UI element missing.</p>";
+        if (targetElement) {
+             targetElement.innerHTML = "<p>Error: UI element missing for Gemini response.</p>";
+             targetElement.classList.remove('hidden');
+        }
+        console.error("Gemini API: Target or loading element not found for ID:", targetElementId, loadingElementId);
         return;
     }
 
@@ -265,42 +306,70 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
     targetElement.innerHTML = ''; 
     targetElement.classList.add('hidden');
 
-
-    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
-    const payload = { contents: chatHistory };
-    const apiKey = ""; 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
+    const payloadToAppsScript = {
+        action: "callGemini", 
+        prompt: prompt
+    };
+    
     try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch(WEB_APP_URL, { 
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            mode: 'cors',
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            redirect: 'follow', 
+            body: JSON.stringify(payloadToAppsScript)
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`API request failed with status ${response.status}: ${errorData?.error?.message || response.statusText}`);
+        const resultText = await response.text();
+        let resultFromProxy;
+        try {
+            resultFromProxy = JSON.parse(resultText);
+        } catch (parseError) {
+            console.error("Failed to parse response from Apps Script proxy as JSON:", resultText);
+            throw new Error(`Invalid response from server proxy. Response: ${resultText.substring(0, 200)}...`);
         }
-
-        const result = await response.json();
         
-        if (result.candidates && result.candidates.length > 0 &&
-            result.candidates[0].content && result.candidates[0].content.parts &&
-            result.candidates[0].content.parts.length > 0) {
-            let text = result.candidates[0].content.parts[0].text;
-            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-            text = text.replace(/\n\s*[\*-]\s(.*?)(?=\n\s*[\*-]|\n\n|$)/g, '<li>$1</li>'); 
-            text = text.replace(/(\<li>.*?<\/li>)+/gs, '<ul>$1</ul>'); 
-            text = text.replace(/\n/g, '<br>'); 
-            targetElement.innerHTML = text;
-            targetElement.classList.remove('hidden');
+        if (resultFromProxy.error) {
+             console.error("Error from Apps Script proxy:", resultFromProxy.error);
+             throw new Error(typeof resultFromProxy.error === 'object' ? JSON.stringify(resultFromProxy.error) : resultFromProxy.error);
+        }
+        
+        const geminiResult = resultFromProxy; 
+        const candidate = geminiResult.candidates && geminiResult.candidates[0];
+
+        if (candidate) {
+            if (candidate.content && candidate.content.parts && candidate.content.parts.length > 0 && candidate.content.parts[0].text) {
+                let text = candidate.content.parts[0].text;
+                text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+                text = text.replace(/\n\s*[\*-]\s(.*?)(?=\n\s*[\*-]|\n\n|$)/g, '<li>$1</li>'); 
+                text = text.replace(/(\<li>.*?<\/li>)+/gs, '<ul>$1</ul>'); 
+                text = text.replace(/\n/g, '<br>'); 
+                targetElement.innerHTML = text;
+                targetElement.classList.remove('hidden');
+            } else if (candidate.finishReason && candidate.finishReason !== "STOP") {
+                console.error(`Gemini API (via Proxy): Generation stopped due to ${candidate.finishReason}. Full Gemini response:`, JSON.stringify(geminiResult,null,2));
+                let finishReasonMessage = `The AI couldn't provide a response. Reason: ${candidate.finishReason}.`;
+                if (candidate.safetyRatings) {
+                     finishReasonMessage += ` Safety ratings: ${JSON.stringify(candidate.safetyRatings)}`;
+                }
+                targetElement.innerHTML = `<p>${finishReasonMessage}</p>`;
+                targetElement.classList.remove('hidden');
+            } else {
+                console.error("Gemini API (via Proxy): Response structure is missing expected text content.", JSON.stringify(geminiResult, null, 2));
+                targetElement.innerHTML = "<p>Sorry, the AI response was not in the expected format.</p>";
+                targetElement.classList.remove('hidden');
+            }
         } else {
-            targetElement.innerHTML = "<p>Sorry, I couldn't get a response. Please try again.</p>";
+            console.error("Gemini API (via Proxy): No candidates found in the response.", JSON.stringify(geminiResult, null, 2));
+            targetElement.innerHTML = "<p>Sorry, no response was generated by the AI.</p>";
             targetElement.classList.remove('hidden');
         }
     } catch (error) {
-        targetElement.innerHTML = `<p>An error occurred: ${error.message}. Check the console for details.</p>`;
+        console.error('Error calling Apps Script proxy for Gemini:', error);
+        targetElement.innerHTML = `<p>An error occurred: ${error.message}. Check console.</p>`;
         targetElement.classList.remove('hidden');
     } finally {
         loadingIndicator.classList.add('hidden');
@@ -511,6 +580,106 @@ function renderTodaysTraining() {
     }
 }
 
+function renderThisWeeksPlan() {
+    const container = document.getElementById('this-weeks-plan-content');
+    if (!container) return;
+
+    if (!currentRaceDate) {
+        container.innerHTML = `<p class="text-sm text-sky-700">Set your race date in the <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">Calendar Tab</button> to see this week's plan.</p>`;
+        return;
+    }
+
+    if (datedTrainingPlan.length === 0 && currentRaceDate && marathonPlan) {
+        calculateAndStoreDatedTrainingPlan(currentRaceDate);
+    }
+
+    const today = new Date();
+    const dayOfWeek = today.getDay(); 
+    const startOfWeekOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; 
+    const monday = new Date(new Date().setDate(today.getDate() + startOfWeekOffset)); 
+    monday.setHours(0, 0, 0, 0);
+    
+    const currentWeekActivities = [];
+    let weekTitleInfo = { weekNum: "N/A", phaseName: "N/A", notes: "" };
+
+    for (let i = 0; i < 7; i++) {
+        const dayInWeek = addDays(monday, i);
+        dayInWeek.setHours(0,0,0,0);
+        const activityForDay = datedTrainingPlan.find(item => {
+            const itemDate = new Date(item.date);
+            itemDate.setHours(0,0,0,0);
+            return isSameDay(itemDate, dayInWeek);
+        });
+
+        if (activityForDay) {
+            if (currentWeekActivities.length === 0) { 
+                weekTitleInfo.weekNum = activityForDay.weekNum;
+                weekTitleInfo.phaseName = activityForDay.phaseName;
+                weekTitleInfo.notes = activityForDay.notes || "";
+            }
+            currentWeekActivities.push({
+                dayName: dayInWeek.toLocaleDateString(undefined, { weekday: 'short' }),
+                activity: activityForDay.activity.replace(/^[^:]+:\s*/, '') 
+            });
+        } else {
+             currentWeekActivities.push({
+                dayName: dayInWeek.toLocaleDateString(undefined, { weekday: 'short' }),
+                activity: "Rest or Unscheduled"
+            });
+        }
+    }
+    
+    if (currentWeekActivities.length > 0) {
+        const dayColors = ['bg-red-50', 'bg-orange-50', 'bg-amber-50', 'bg-yellow-50', 'bg-lime-50', 'bg-green-50', 'bg-emerald-50'];
+        let tableRowsHtml = currentWeekActivities.map((dayEntry, index) => {
+            const bgColor = dayColors[index % dayColors.length];
+            return `<tr class="${bgColor}">
+                        <td class="p-3 font-medium text-stone-800">${dayEntry.dayName}</td>
+                        <td class="p-3 text-stone-700">${dayEntry.activity}</td>
+                    </tr>`;
+        }).join('');
+
+        container.innerHTML = `
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-lg font-semibold text-green-700">This Week's Plan (Wk ${weekTitleInfo.weekNum} - ${weekTitleInfo.phaseName})</h3>
+                <button id="printWeekPdfBtn" class="pdf-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M5 2.5A2.5 2.5 0 0 1 7.5 0h5A2.5 2.5 0 0 1 15 2.5V5h-2.55a3 3 0 0 0-4.9 0H5V2.5zM10 6a2 2 0 0 0-1.936 1.5H5V15a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7.5h-3.064A2 2 0 0 0 10 6zm0 2a.75.75 0 0 1 .75.75v.032l1.533.306a.75.75 0 0 1-.293 1.455l-1.68-.335a.75.75 0 0 1-.59-.518L9.25 8.75A.75.75 0 0 1 10 8z" clip-rule="evenodd" /></svg>
+                    PDF
+                </button>
+            </div>
+            <div id="this-weeks-plan-printable-area">
+                <div class="overflow-x-auto rounded-lg border border-stone-200">
+                    <table class="schedule-table min-w-full">
+                        <thead>
+                            <tr>
+                                <th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Day</th>
+                                <th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Activity</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-stone-200">
+                            ${tableRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                ${weekTitleInfo.notes ? `<p class="text-sm text-stone-600 italic mt-3 p-3 bg-stone-100 rounded-md"><strong>Weekly Notes:</strong> ${weekTitleInfo.notes}</p>` : ''}
+            </div>
+        `;
+        const pdfBtn = document.getElementById('printWeekPdfBtn');
+        if (pdfBtn) pdfBtn.addEventListener('click', printWeekToPdf);
+
+    } else {
+        container.innerHTML = `<h3 class="text-lg font-semibold text-green-700 mb-1">This Week's Plan</h3><p class="text-stone-600">No training scheduled for this week based on your race date, or the plan is not loaded.</p>`;
+    }
+}
+
+function printWeekToPdf() {
+    const printContent = document.getElementById('this-weeks-plan-printable-area');
+    if (printContent) {
+        window.print();
+    }
+}
+
+
 function renderOverview() {
     if (!marathonPlan) return;
     setActiveNav('nav-overview');
@@ -522,6 +691,9 @@ function renderOverview() {
     overviewSection.innerHTML = `
         <div id="todays-training-card" class="content-card p-4 mb-6">
             <div id="todays-training-content"></div> 
+        </div>
+        <div id="this-weeks-plan-card" class="content-card p-4 mb-6">
+            <div id="this-weeks-plan-content"></div> 
         </div>
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.philosophy.title || 'Training Philosophy'}</h2>
@@ -546,6 +718,7 @@ function renderOverview() {
     appContent.appendChild(overviewSection);
     
     renderTodaysTraining(); 
+    renderThisWeeksPlan();
     renderMileageChart();
 }
 
@@ -845,12 +1018,9 @@ function renderPaceUtilities() {
             <div id="cardiacDriftResultArea" class="mt-6 p-4 rounded-md min-h-[50px] text-center font-medium text-base sm:text-lg result-default">
                 Enter data and click calculate.
             </div>
-            <div id="cardiacDriftAiSection" class="mt-4 text-center hidden">
-                <button id="cardiacDriftAiInsightsButton" class="ai-button text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:shadow-md transition duration-150 ease-in-out text-sm sm:text-base">
-                    Get AI Insights
-                </button>
+            <div id="cardiacDriftAiSection" class="mt-4 text-center">
                 <div id="cardiacDriftAiLoadingIndicator" class="loader hidden mt-3"></div>
-                <div id="cardiacDriftAiResponseArea" class="mt-3 p-4 rounded-md min-h-[60px] text-left text-sm sm:text-base whitespace-pre-wrap"></div>
+                <div id="cardiacDriftAiResponseArea" class="mt-3 p-4 rounded-md min-h-[60px] text-left text-sm sm:text-base whitespace-pre-wrap hidden"></div>
             </div>
         </div>
     `;
@@ -955,13 +1125,8 @@ function calculateCardiacDriftSimplifiedCD(paceStart_kmh, hrStart_bpm, paceEnd_k
 
 function setupCardiacDriftCalculatorListeners() {
     const calculateButton = document.getElementById('cardiacDriftCalculateButton');
-    const aiInsightsButton = document.getElementById('cardiacDriftAiInsightsButton');
-
     if (calculateButton) {
         calculateButton.addEventListener('click', handleCardiacDriftCalculation);
-    }
-    if (aiInsightsButton) {
-        aiInsightsButton.addEventListener('click', fetchCardiacDriftAiInsights);
     }
 }
 
@@ -976,9 +1141,9 @@ function handleCardiacDriftCalculation() {
 
     resultArea.className = 'mt-6 p-4 rounded-md min-h-[50px] text-center font-medium text-base sm:text-lg result-default';
     resultArea.textContent = 'Calculating...';
-    if(aiSection) aiSection.classList.add('hidden');
-    if(aiResponseArea) aiResponseArea.textContent = '';
-    currentCardiacDriftAiPrompt = "";
+    if(aiResponseArea) aiResponseArea.textContent = ''; 
+    if(aiResponseArea) aiResponseArea.classList.add('hidden'); 
+
 
     const paceStartStr = startPaceInput.value;
     const hrStart = parseFloat(startHrInput.value);
@@ -1002,7 +1167,7 @@ function handleCardiacDriftCalculation() {
 
     if (typeof result === 'number') {
         displayCardiacDriftResult(result);
-        if(aiSection) aiSection.classList.remove('hidden');
+        fetchCardiacDriftAiInsights(); 
     } else {
         displayCardiacDriftError(result); 
     }
@@ -1010,12 +1175,12 @@ function handleCardiacDriftCalculation() {
 
 function displayCardiacDriftError(message) {
     const resultArea = document.getElementById('cardiacDriftResultArea');
-    const aiSection = document.getElementById('cardiacDriftAiSection');
+    const aiResponseArea = document.getElementById('cardiacDriftAiResponseArea');
     if (!resultArea) return;
     resultArea.textContent = message;
     resultArea.classList.remove('result-blue', 'result-yellow', 'result-red', 'result-default');
     resultArea.classList.add('error-display');
-    if(aiSection) aiSection.classList.add('hidden');
+    if(aiResponseArea) aiResponseArea.classList.add('hidden'); 
 }
 
 function displayCardiacDriftResult(driftValue) {
@@ -1038,13 +1203,8 @@ function displayCardiacDriftResult(driftValue) {
 
 async function fetchCardiacDriftAiInsights() {
     if (!currentCardiacDriftAiPrompt) return;
-    const aiInsightsButton = document.getElementById('cardiacDriftAiInsightsButton');
-    if(aiInsightsButton) aiInsightsButton.disabled = true;
     
-    callGeminiApi(currentCardiacDriftAiPrompt, 'cardiacDriftAiResponseArea', 'cardiacDriftAiLoadingIndicator')
-      .finally(() => {
-          if(aiInsightsButton) aiInsightsButton.disabled = false;
-      });
+    callGeminiApi(currentCardiacDriftAiPrompt, 'cardiacDriftAiResponseArea', 'cardiacDriftAiLoadingIndicator');
 }
 
 
