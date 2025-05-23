@@ -87,29 +87,50 @@
         #loading-message { color: #0369a1; }
         #error-message { color: #dc2626; background-color: #fee2e2; border: 1px solid #f87171; border-radius: 0.5rem; }
         
-        /* Calendar Styles */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #e5e7eb; border: 1px solid #e5e7eb; }
         .calendar-header { text-align: center; padding: 0.5rem; background-color: #f9fafb; font-weight: 600; font-size: 0.875rem; color: #374151; }
         .calendar-day { background-color: #fff; padding: 0.5rem; min-height: 100px; font-size: 0.75rem; border: 1px solid #f3f4f6; }
         .calendar-day.other-month { background-color: #f9fafb; color: #9ca3af; }
-        .calendar-day.is-today { background-color: #ecfdf5; /* green-50 */ border: 2px solid #10b981; /* green-500 */ }
+        .calendar-day.is-today { background-color: #ecfdf5; border: 2px solid #10b981; }
         .calendar-day .day-number { font-weight: 600; margin-bottom: 0.25rem; display: block; }
         
         .activity-thumbnail { 
             display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
             padding: 0.25rem; border-radius: 0.25rem; margin-top: 0.25rem;
-            font-size: 0.7rem; /* Slightly smaller font for thumbnails */
+            font-size: 0.7rem;
         }
-        .activity-thumbnail-easy { background-color: #e0f2fe; color: #0c4a6e; } /* sky-100, sky-800 */
-        .activity-thumbnail-tempo { background-color: #ffedd5; color: #c2410c; } /* orange-100, orange-700 */
-        .activity-thumbnail-interval { background-color: #fee2e2; color: #b91c1c; } /* red-100, red-700 */
-        .activity-thumbnail-long { background-color: #f3e8ff; color: #7e22ce; } /* purple-100, purple-700 */
-        .activity-thumbnail-race { background-color: #fce7f3; color: #be185d; } /* pink-100, pink-700 */
-        .activity-thumbnail-rest { background-color: #f1f5f9; color: #475569; } /* slate-100, slate-600 */
-        .activity-thumbnail-default { background-color: #e0f2fe; color: #0c4a6e; } /* Default: same as easy */
+        .activity-thumbnail-easy { background-color: #e0f2fe; color: #0c4a6e; } 
+        .activity-thumbnail-tempo { background-color: #ffedd5; color: #c2410c; }
+        .activity-thumbnail-interval { background-color: #fee2e2; color: #b91c1c; }
+        .activity-thumbnail-long { background-color: #f3e8ff; color: #7e22ce; } 
+        .activity-thumbnail-race { background-color: #fce7f3; color: #be185d; } 
+        .activity-thumbnail-rest { background-color: #f1f5f9; color: #475569; }
+        .activity-thumbnail-default { background-color: #e0f2fe; color: #0c4a6e; }
 
+        #todays-training-card { border-left: 4px solid #0ea5e9; }
+        
+        .gemini-response-area {
+            margin-top: 1rem; padding: 0.75rem; background-color: #e0f2fe; /* sky-100 */
+            border-radius: 0.375rem; /* rounded-md */ border: 1px solid #bae6fd; /* sky-200 */
+            font-size: 0.875rem; color: #0c4a6e; /* sky-800 */
+            max-height: 200px; overflow-y: auto;
+        }
+        .gemini-response-area p { margin-bottom: 0.5rem;}
+        .gemini-response-area strong { color: #0369a1; /* sky-700 */ }
+        .gemini-response-area ul { margin-left: 1.25rem; } /* Indent lists */
+        .gemini-loading-spinner {
+            display: inline-block; width: 1rem; height: 1rem; border-radius: 50%;
+            border: 2px solid currentColor; border-top-color: transparent;
+            animation: spin 1s linear infinite; margin-left: 0.5rem; vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        #todays-training-card { border-left: 4px solid #0ea5e9; /* sky-500 */ }
+        .ai-button {
+            background-color: #7c3aed; /* violet-600 */ color: white;
+            padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .ai-button:hover { background-color: #6d28d9; /* violet-700 */ }
     </style>
 </head>
 <body class="min-h-screen p-4 py-8">
@@ -121,7 +142,7 @@
                      class="header-logo"
                      onerror="this.parentElement.innerHTML='<h1 class=\'text-2xl sm:text-3xl font-bold text-white\'>Helios Running</h1>'">
             </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 mt-4">Marathon Plan & Training Tools</h1>
+            <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 mt-4">Marathon Plan & Tools</h1>
             <p class="text-stone-600">Your interactive guide to marathon training and pace utilities.</p>
         </header>
 
@@ -146,19 +167,82 @@
 
 <script>
 // --- Configuration ---
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUePACew4T4yiaL5oRqXSobZHb6m-ONujQirZoARs4t7ILJpRbjAz-N1HLtOPZKw-/exec'; // Replace with your actual Web App URL
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUePACew4T4yiaL5oRqXSobZHb6m-ONujQirZoARs4t7ILJpRbjAz-N1HLtOPZKw-/exec';
 const DEFAULT_RACE_DATE_STRING = '2025-11-09';
 
 // --- Global Variables ---
 let marathonPlan = null;
-let datedTrainingPlan = []; // To store activities mapped to specific dates
-let currentRaceDate = null; // Stores the user-set race date
-let calendarCurrentDisplayDate = new Date(); // For calendar month navigation
+let datedTrainingPlan = [];
+let currentRaceDate = null;
+let calendarCurrentDisplayDate = new Date();
+let currentTodaysActivityForAI = null; // Store today's activity for AI advice
 
 const appContent = document.getElementById('app-content');
 const loadingMessageDiv = document.getElementById('loading-message');
 const errorMessageDiv = document.getElementById('error-message');
 let mileageChartInstance = null;
+
+// --- Gemini API Helper ---
+async function callGeminiApi(prompt, targetElementId, loadingElementId) {
+    const targetElement = document.getElementById(targetElementId);
+    const loadingIndicator = document.getElementById(loadingElementId);
+
+    if (!targetElement || !loadingIndicator) {
+        console.error("Gemini API: Target or loading element not found for", targetElementId);
+        if (targetElement) targetElement.innerHTML = "<p>Error: UI element missing.</p>";
+        return;
+    }
+
+    loadingIndicator.classList.remove('hidden');
+    targetElement.innerHTML = ''; 
+    targetElement.classList.add('hidden');
+
+
+    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+    const payload = { contents: chatHistory };
+    const apiKey = ""; // Left empty for Canvas to handle
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Gemini API Error Response:", errorData);
+            throw new Error(`API request failed with status ${response.status}: ${errorData?.error?.message || response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            let text = result.candidates[0].content.parts[0].text;
+            // Basic Markdown to HTML conversion (bold and lists)
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
+            text = text.replace(/\n\s*[\*-]\s(.*?)(?=\n\s*[\*-]|\n\n|$)/g, '<li>$1</li>'); // Unordered/Ordered list items (handles * and -)
+            text = text.replace(/(\<li>.*?<\/li>)+/gs, '<ul>$1</ul>'); // Wrap list items in <ul>
+            text = text.replace(/\n/g, '<br>'); // Newlines to <br>
+            targetElement.innerHTML = text;
+            targetElement.classList.remove('hidden');
+        } else {
+            console.error("Gemini API: Unexpected response structure or no content.", result);
+            targetElement.innerHTML = "<p>Sorry, I couldn't get a response. Please try again.</p>";
+            targetElement.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error calling Gemini API:', error);
+        targetElement.innerHTML = `<p>An error occurred: ${error.message}. Check the console for details.</p>`;
+        targetElement.classList.remove('hidden');
+    } finally {
+        loadingIndicator.classList.add('hidden');
+    }
+}
+
 
 // --- Data Fetching and Initialization ---
 async function fetchMarathonPlan() {
@@ -172,7 +256,6 @@ async function fetchMarathonPlan() {
         if (data.error) {
             throw new Error(`Error from Google Sheet App: ${data.error}`);
         }
-        // Basic validation of the fetched data structure
         if (!data.philosophy || !data.philosophy.title || !Array.isArray(data.philosophy.content) ||
             !data.paceGuide || !data.paceGuide.title || !Array.isArray(data.paceGuide.paces) ||
             !data.generalNotes || !data.generalNotes.title || !Array.isArray(data.generalNotes.notes) ||
@@ -182,18 +265,15 @@ async function fetchMarathonPlan() {
         }
         marathonPlan = data;
 
-        // Initialize race date: from localStorage or default
         const storedRaceDate = localStorage.getItem('marathonRaceDate');
         if (storedRaceDate) {
-            const parsedDate = new Date(storedRaceDate + 'T00:00:00'); // Ensure local timezone interpretation
-            if (isValidDate(parsedDate)) {
-                currentRaceDate = parsedDate;
-            }
+            const parsedDate = new Date(storedRaceDate + 'T00:00:00');
+            if (isValidDate(parsedDate)) currentRaceDate = parsedDate;
         }
         
-        if (!currentRaceDate) { // If no valid date from localStorage, use default
+        if (!currentRaceDate) {
             currentRaceDate = new Date(DEFAULT_RACE_DATE_STRING + 'T00:00:00');
-            localStorage.setItem('marathonRaceDate', DEFAULT_RACE_DATE_STRING); // Store default if used
+            localStorage.setItem('marathonRaceDate', DEFAULT_RACE_DATE_STRING);
         }
         
         calculateAndStoreDatedTrainingPlan(currentRaceDate);
@@ -204,7 +284,7 @@ async function fetchMarathonPlan() {
         console.error('Failed to fetch marathon plan:', error);
         if(loadingMessageDiv) loadingMessageDiv.classList.add('hidden');
         if(errorMessageDiv) {
-            errorMessageDiv.textContent = `Error loading training plan: ${error.message}. Please ensure the Google Sheet is accessible and the Apps Script is deployed correctly (check 'Who has access' is 'Anyone'). You might need to check the Apps Script logs for more details.`;
+            errorMessageDiv.textContent = `Error loading training plan: ${error.message}. Please ensure the Google Sheet is accessible and the Apps Script is deployed correctly.`;
             errorMessageDiv.classList.remove('hidden');
         }
     }
@@ -220,15 +300,13 @@ function initializeApp() {
     document.getElementById('nav-calendar').addEventListener('click', renderCalendarTab);
     document.getElementById('nav-utils').addEventListener('click', renderPaceUtilities);
     
-    renderOverview(); // Default view
+    renderOverview();
 }
 
 function setActiveNav(activeId) {
     document.querySelectorAll('.nav-button').forEach(btn => {
         btn.classList.remove('active');
-        if (btn.id === activeId) {
-            btn.classList.add('active');
-        }
+        if (btn.id === activeId) btn.classList.add('active');
     });
 }
 
@@ -237,22 +315,16 @@ function createHtmlList(items) {
     return `<ul class="list-disc list-inside space-y-1 text-stone-700">${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
 }
 
-// --- Date Helper Functions ---
-function isValidDate(d) {
-  return d instanceof Date && !isNaN(d);
-}
-
+function isValidDate(d) { return d instanceof Date && !isNaN(d); }
 function formatDate(date, options = { year: 'numeric', month: 'long', day: 'numeric' }) {
     if (!isValidDate(date)) return "N/A";
     return date.toLocaleDateString(undefined, options);
 }
-
 function addDays(date, days) {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
 }
-
 function isSameDay(date1, date2) {
     if (!isValidDate(date1) || !isValidDate(date2)) return false;
     return date1.getFullYear() === date2.getFullYear() &&
@@ -260,108 +332,165 @@ function isSameDay(date1, date2) {
            date1.getDate() === date2.getDate();
 }
 
-// --- Training Plan Date Calculation ---
 function calculateAndStoreDatedTrainingPlan(raceDateInput) {
     if (!marathonPlan || !marathonPlan.phases || !isValidDate(raceDateInput)) {
-        datedTrainingPlan = [];
-        console.warn("Cannot calculate dated plan: Missing plan data or invalid race date.", marathonPlan, raceDateInput);
-        return;
+        datedTrainingPlan = []; return;
     }
     currentRaceDate = new Date(raceDateInput); 
     localStorage.setItem('marathonRaceDate', currentRaceDate.toISOString().split('T')[0]);
-
     let allDaysScheduled = [];
     marathonPlan.phases.forEach(phase => {
         phase.weeks.forEach(week => {
-            week.days.forEach(dayString => {
-                allDaysScheduled.push({
-                    activity: dayString, 
-                    notes: week.notes || "",
-                    phaseName: phase.name,
-                    weekNum: week.weekNum,
-                    totalKm: week.totalKm
-                });
-            });
+            week.days.forEach(dayString => allDaysScheduled.push({
+                activity: dayString, notes: week.notes || "",
+                phaseName: phase.name, weekNum: week.weekNum, totalKm: week.totalKm
+            }));
         });
     });
-
     datedTrainingPlan = [];
     let tempCurrentDate = new Date(currentRaceDate); 
-
     for (let i = allDaysScheduled.length - 1; i >= 0; i--) {
-        const scheduledItem = allDaysScheduled[i];
-        datedTrainingPlan.unshift({ 
-            date: new Date(tempCurrentDate),
-            ...scheduledItem
-        });
+        datedTrainingPlan.unshift({ date: new Date(tempCurrentDate), ...allDaysScheduled[i] });
         tempCurrentDate = addDays(tempCurrentDate, -1); 
     }
 }
 
+// --- AI Feature for Today's Training ---
+function getTodaysTrainingAdvice() {
+    if (!currentTodaysActivityForAI) {
+        const responseDiv = document.getElementById('todays-advice-response');
+        if (responseDiv) {
+            responseDiv.innerHTML = "<p>No training scheduled for today to get advice on, or data not loaded.</p>";
+            responseDiv.classList.remove('hidden');
+        }
+        const loadingDiv = document.getElementById('todays-advice-loading');
+        if (loadingDiv) loadingDiv.classList.add('hidden');
+        return;
+    }
 
-// --- "Today's Training" Section ---
+    const activityDetails = currentTodaysActivityForAI;
+    const activityType = activityDetails.activity.toLowerCase();
+    let specificAdviceHint = ""; // This will guide the English prompt for more specific advice.
+
+    if (activityType.includes("interval")) {
+        specificAdviceHint = "For these intervals, emphasize starting the first few repeats at a controlled effort before increasing intensity. Also, mention the importance of recovery between intervals, and proper warm-up and cool-down.";
+    } else if (activityType.includes("tempo")) {
+        specificAdviceHint = "For this tempo run, advise on maintaining a comfortably hard, steady pace and staying relaxed, especially in the early stages. Mention focusing on breathing and form.";
+    } else if (activityType.includes("long run")) {
+        specificAdviceHint = "For this long run, suggest focusing on even pacing, practicing fueling/hydration strategy as if it were race day, and the mental aspect of endurance. Also, advise on post-run recovery.";
+    } else if (activityType.includes("easy run") || activityType.includes("fartlek") || activityType.includes("hills")) {
+        specificAdviceHint = "For this run, highlight the importance of a conversational pace if it's an easy run, or the specific purpose if it's fartlek/hills (e.g., varying intensity, building strength). Include warm-up and cool-down advice.";
+    } else if (activityType.includes("rest") || activityType.includes("active recovery") || activityType.includes("cross-train")) {
+        specificAdviceHint = "For this rest/active recovery/cross-train day, emphasize its importance for muscle repair, preventing overtraining, and overall recovery in the training process. Suggest light activities if it's active recovery or cross-training.";
+    }
+
+
+    const prompt = `
+        My marathon training plan for today (${formatDate(activityDetails.date, {weekday: 'long', month: 'long', day: 'numeric'})}) is:
+        Activity: ${activityDetails.activity.replace(/^[^:]+:\s*/, '')}
+        Phase: ${activityDetails.phaseName}
+        Week: ${activityDetails.weekNum}
+        Weekly Notes (if any apply to today): ${activityDetails.notes || "None"}
+
+        Please provide concise, actionable advice for this specific training session. 
+        ${specificAdviceHint}
+        Keep it positive and encouraging. Format as a bulleted list if appropriate.
+        **Respond ONLY in Greek. Do not include any English text in your response.**
+    `;
+    callGeminiApi(prompt, 'todays-advice-response', 'todays-advice-loading');
+}
+
+
 function renderTodaysTraining() {
     const container = document.getElementById('todays-training-content');
     if (!container) return;
 
+    currentTodaysActivityForAI = null; 
+
     if (!currentRaceDate) {
-        container.innerHTML = `
-            <p class="text-sm text-sky-700">
-                Set your race date in the <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">Calendar Tab</button> to see today's training. Default is ${DEFAULT_RACE_DATE_STRING}.
-            </p>`;
+        container.innerHTML = `<p class="text-sm text-sky-700">Set your race date in the <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">Calendar Tab</button> to see today's training. Default is ${DEFAULT_RACE_DATE_STRING}.</p>`;
         return;
     }
+    if (datedTrainingPlan.length === 0 && currentRaceDate && marathonPlan) calculateAndStoreDatedTrainingPlan(currentRaceDate);
     
-    // Ensure datedTrainingPlan is populated if currentRaceDate exists but plan is empty
-    if (datedTrainingPlan.length === 0 && currentRaceDate && marathonPlan) {
-         calculateAndStoreDatedTrainingPlan(currentRaceDate);
-    }
-    
-    const today = new Date();
-    today.setHours(0,0,0,0); // Normalize today's date to midnight for accurate comparison
+    const today = new Date(); 
+    today.setHours(0,0,0,0); 
 
     const todaysActivity = datedTrainingPlan.find(item => {
-        const itemDate = new Date(item.date);
-        itemDate.setHours(0,0,0,0); // Normalize item date
+        const itemDate = new Date(item.date); 
+        itemDate.setHours(0,0,0,0); 
         return isSameDay(itemDate, today);
     });
-
+    
+    currentTodaysActivityForAI = todaysActivity; 
 
     if (todaysActivity) {
         const dayName = todaysActivity.date.toLocaleDateString(undefined, { weekday: 'long' });
-        let activityText = todaysActivity.activity.replace(/^[^:]+:\s*/, ''); // Remove "Mon: " prefix for display
-        let activityHtml = `<p class="text-stone-700">${activityText}</p>`; 
+        let activityText = todaysActivity.activity.replace(/^[^:]+:\s*/, '');
+        
+        let adviceButtonHtml = `
+            <div class="mt-3">
+                <button id="getTodaysAdviceBtn" class="ai-button">✨ Advice</button>
+                <div id="todays-advice-loading" class="hidden mt-2"><span class="gemini-loading-spinner"></span> Fetching advice...</div>
+                <div id="todays-advice-response" class="gemini-response-area hidden"></div>
+            </div>`;
 
         container.innerHTML = `
             <h3 class="text-lg font-semibold text-sky-700 mb-1">Today's Training (${dayName}, ${formatDate(today)})</h3>
-            ${activityHtml}
+            <p class="text-stone-700">${activityText}</p>
             ${todaysActivity.notes ? `<p class="text-sm text-stone-600 italic mt-1"><strong>Weekly Notes:</strong> ${todaysActivity.notes}</p>` : ''}
             <p class="text-xs text-stone-500 mt-1">Phase: ${todaysActivity.phaseName} | Week: ${todaysActivity.weekNum}</p>
+            ${adviceButtonHtml}
         `;
+        const adviceBtn = document.getElementById('getTodaysAdviceBtn');
+        if (adviceBtn) {
+            adviceBtn.addEventListener('click', getTodaysTrainingAdvice);
+        }
+
     } else {
-        container.innerHTML = `
-            <h3 class="text-lg font-semibold text-sky-700 mb-1">Today's Training (${formatDate(today)})</h3>
-            <p class="text-stone-700">No specific training scheduled for today based on your race date (${formatDate(currentRaceDate)}), or you are outside the plan's duration.</p>
-            <p class="text-sm text-stone-600">This might be a rest day or before the plan starts / after it ends.</p>
-        `;
+        container.innerHTML = `<h3 class="text-lg font-semibold text-sky-700 mb-1">Today's Training (${formatDate(today)})</h3><p class="text-stone-700">No specific training scheduled for today based on your race date (${formatDate(currentRaceDate)}), or you are outside the plan's duration.</p><p class="text-sm text-stone-600">This might be a rest day or before the plan starts / after it ends.</p>`;
     }
 }
+
+// --- AI Feature for Weekly Focus (Training Plan Tab) ---
+function getWeeklyFocus(phaseIndex, weekIndex) {
+    if (!marathonPlan || !marathonPlan.phases[phaseIndex] || !marathonPlan.phases[phaseIndex].weeks[weekIndex]) {
+        const responseDiv = document.getElementById('weekly-focus-response');
+        if (responseDiv) responseDiv.innerHTML = "<p>Could not retrieve week data to generate focus.</p>";
+        return;
+    }
+    const weekData = marathonPlan.phases[phaseIndex].weeks[weekIndex];
+    const activities = weekData.days.join("\n");
+    const notes = weekData.notes || "No specific notes for this week.";
+
+    const prompt = `
+        I am in a marathon training plan. For Week ${weekData.weekNum} of the "${marathonPlan.phases[phaseIndex].name}" phase, my schedule is:
+        ${activities}
+        Weekly notes: ${notes}
+        Total weekly mileage is about: ${weekData.totalKm}.
+
+        Please provide a short, motivational "Weekly Focus & Pep Talk". 
+        Highlight 1-2 key workouts and their importance for marathon training. 
+        Offer some encouragement and general advice for tackling this week successfully.
+        Keep it concise and positive. Format as a bulleted list where appropriate.
+        **Respond ONLY in Greek. Do not include any English text in your response.**
+    `;
+    callGeminiApi(prompt, 'weekly-focus-response', 'weekly-focus-loading');
+}
+
 
 // --- Plan Overview Tab ---
 function renderOverview() {
     if (!marathonPlan) return;
     setActiveNav('nav-overview');
     appContent.innerHTML = ''; 
-
     const overviewSection = document.createElement('section');
     overviewSection.id = "overview-content";
     overviewSection.className = "space-y-6";
 
     overviewSection.innerHTML = `
         <div id="todays-training-card" class="content-card p-4 mb-6">
-            <div id="todays-training-content">
-                </div>
-        </div>
+            <div id="todays-training-content"></div> </div>
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.philosophy.title || 'Training Philosophy'}</h2>
             ${createHtmlList(marathonPlan.philosophy.content)}
@@ -371,7 +500,7 @@ function renderOverview() {
             <div class="chart-container bg-white p-2 rounded-md shadow">
                 <canvas id="mileageChart"></canvas>
             </div>
-            <p class="text-xs text-stone-500 mt-2 text-center">Hover over points to see weekly mileage. Data sourced from "Mileage Data" sheet.</p>
+            <p class="text-xs text-stone-500 mt-2 text-center">Hover over points to see weekly mileage.</p>
         </div>
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.paceGuide.title || 'Pace Guide'}</h2>
@@ -388,58 +517,37 @@ function renderOverview() {
 }
 
 function renderMileageChart() {
-    if (!marathonPlan || !marathonPlan.phases) {
-        console.warn("Mileage chart: marathonPlan or phases data not available.");
-        return;
-    }
+    if (!marathonPlan || !marathonPlan.phases) return;
     const chartCanvas = document.getElementById('mileageChart');
-    if (!chartCanvas) {
-        return;
-    }
-    const labels = [];
-    const dataPoints = [];
+    if (!chartCanvas) return;
+    const labels = []; const dataPoints = [];
     marathonPlan.phases.forEach(phase => {
-        if (!phase.weeks || !Array.isArray(phase.weeks)) {
-            console.warn("Phase missing weeks array for chart:", phase.name);
-            return; 
-        }
+        if (!phase.weeks || !Array.isArray(phase.weeks)) return;
         phase.weeks.forEach(week => {
             labels.push(`W${week.weekNum}`);
             let kmValue = typeof week.chartKm === 'number' ? week.chartKm : 0;
             if (typeof week.chartKm !== 'number' && typeof week.totalKm === 'string') { 
-                const match = week.totalKm.match(/(\d+)/); 
-                if (match) kmValue = parseInt(match[1], 10);
-            } else if (typeof week.chartKm !== 'number' && typeof week.totalKm === 'number') {
-                 kmValue = week.totalKm;
-            }
+                const match = week.totalKm.match(/(\d+)/); if (match) kmValue = parseInt(match[1], 10);
+            } else if (typeof week.chartKm !== 'number' && typeof week.totalKm === 'number') kmValue = week.totalKm;
             dataPoints.push(kmValue);
         });
     });
-    if (mileageChartInstance) {
-        mileageChartInstance.destroy();
-    }
+    if (mileageChartInstance) mileageChartInstance.destroy();
     mileageChartInstance = new Chart(chartCanvas.getContext('2d'), {
         type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Planned Weekly Kilometers', data: dataPoints, borderColor: '#0d9488', 
-                backgroundColor: 'rgba(13, 148, 136, 0.1)', tension: 0.1, fill: true,
-                pointBackgroundColor: '#0d9488', pointBorderColor: '#fff', pointHoverRadius: 7,
-                pointHoverBackgroundColor: '#0d9488'
-            }]
+        data: { labels: labels, datasets: [{
+            label: 'Planned Weekly Kilometers', data: dataPoints, borderColor: '#0d9488', 
+            backgroundColor: 'rgba(13, 148, 136, 0.1)', tension: 0.1, fill: true,
+            pointBackgroundColor: '#0d9488', pointBorderColor: '#fff', pointHoverRadius: 7,
+            pointHoverBackgroundColor: '#0d9488' }]
         },
-        options: { 
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, title: { display: true, text: 'Kilometers (km)', font: { weight: '500' } } },
-                x: { title: { display: true, text: 'Training Week', font: { weight: '500' } }, ticks: { autoSkip: true, maxTicksLimit: 20, callback: function(v,i,vals){ return this.getLabelForValue(v);}} }
-            },
-            plugins: {
-                tooltip: { enabled: true, mode: 'index', intersect: false, backgroundColor: 'rgba(0,0,0,0.8)', titleFont: { weight: 'bold' }, callbacks: { label: function(ctx) { return `${ctx.dataset.label}: ${ctx.parsed.y} km`; } } },
-                legend: { labels: { font: { weight: '500' } } }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false, scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Kilometers (km)', font: { weight: '500' } } },
+            x: { title: { display: true, text: 'Training Week', font: { weight: '500' } }, ticks: { autoSkip: true, maxTicksLimit: 20, callback: function(v,i,vals){ return this.getLabelForValue(v);}}}
+        }, plugins: {
+            tooltip: { enabled: true, mode: 'index', intersect: false, backgroundColor: 'rgba(0,0,0,0.8)', titleFont: { weight: 'bold' }, callbacks: { label: function(ctx) { return `${ctx.dataset.label}: ${ctx.parsed.y} km`; } } },
+            legend: { labels: { font: { weight: '500' } } }
+        }}
     });
 }
 
@@ -459,37 +567,27 @@ function renderTrainingPlan() {
     const trainingPlanSection = document.createElement('section');
     trainingPlanSection.id = "training-plan-content";
     trainingPlanSection.className = "space-y-6";
-    const phaseButtonsHtml = marathonPlan.phases.map((phase, index) => {
-        const buttonClass = getPhaseButtonClass(phase.name);
-        return `<button class="phase-button ${buttonClass}" data-phase-index="${index}">${phase.name}</button>`
-    }).join('');
+    const phaseButtonsHtml = marathonPlan.phases.map((phase, index) => 
+        `<button class="phase-button ${getPhaseButtonClass(phase.name)}" data-phase-index="${index}">${phase.name}</button>`
+    ).join('');
     trainingPlanSection.innerHTML = `
         <div>
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Select Training Phase:</h2>
-            <div id="phase-navigation" class="flex flex-wrap gap-2 mb-6">
-                ${phaseButtonsHtml}
-            </div>
-            <div id="phase-details" class="space-y-4">
-                <p class="text-stone-600 italic">Select a phase to see its details and weekly breakdown.</p>
-            </div>
+            <div id="phase-navigation" class="flex flex-wrap gap-2 mb-6">${phaseButtonsHtml}</div>
+            <div id="phase-details" class="space-y-4"><p class="text-stone-600 italic">Select a phase to see its details.</p></div>
         </div>
-        <div id="week-details-container" class="mt-6"></div>
-    `;
+        <div id="week-details-container" class="mt-6"></div>`;
     appContent.appendChild(trainingPlanSection);
     document.querySelectorAll('#phase-navigation .phase-button').forEach(button => {
         button.addEventListener('click', (e) => {
             document.querySelectorAll('#phase-navigation .phase-button').forEach(btn => btn.classList.remove('active'));
             e.target.classList.add('active');
-            const phaseIndex = parseInt(e.target.dataset.phaseIndex);
-            renderPhaseDetails(phaseIndex);
+            renderPhaseDetails(parseInt(e.target.dataset.phaseIndex));
         });
     });
     if (marathonPlan.phases && marathonPlan.phases.length > 0) {
         const firstPhaseButton = document.querySelector('#phase-navigation .phase-button');
-        if (firstPhaseButton) {
-            firstPhaseButton.classList.add('active'); 
-            renderPhaseDetails(0); 
-        }
+        if (firstPhaseButton) { firstPhaseButton.classList.add('active'); renderPhaseDetails(0); }
     }
 }
 
@@ -497,21 +595,12 @@ function formatPhaseDuration(durationString) {
     if (!durationString || typeof durationString !== 'string') return 'N/A';
     const weeksMatch = durationString.match(/(\S+\s+Weeks)/i); 
     const dateMatch = durationString.match(/\(([^)]+)\)/);   
-    let weeksPart = "";
+    let weeksPart = weeksMatch ? `[${weeksMatch[1].replace('~','').trim()}]` : "";
     let datePart = "";
-    if (weeksMatch) {
-        weeksPart = `[${weeksMatch[1].replace('~','').trim()}]`;
-    }
     if (dateMatch) {
         let dates = dateMatch[1];
-        const monthReplacements = {
-            "January": "Jan", "February": "Feb", "March": "Mar", "April": "Apr",
-            "May": "May", "June": "Jun", "July": "Jul", "August": "Aug",
-            "September": "Sep", "October": "Oct", "November": "Nov", "December": "Dec"
-        };
-        for (const longMonth in monthReplacements) {
-            dates = dates.replace(new RegExp(longMonth, "g"), monthReplacements[longMonth]);
-        }
+        const monthReplacements = {"January":"Jan", "February":"Feb", "March":"Mar", "April":"Apr", "May":"May", "June":"Jun", "July":"Jul", "August":"Aug", "September":"Sep", "October":"Oct", "November":"Nov", "December":"Dec"};
+        for (const longMonth in monthReplacements) dates = dates.replace(new RegExp(longMonth, "g"), monthReplacements[longMonth]);
         datePart = `(${dates})`;
     }
     return `${weeksPart} ${datePart}`.trim();
@@ -521,10 +610,7 @@ function renderPhaseDetails(phaseIndex) {
     if (!marathonPlan) return;
     const phase = marathonPlan.phases[phaseIndex];
     if (!phase) {
-        console.error("Phase not found for index:", phaseIndex);
-        const phaseDetailsDiv = document.getElementById('phase-details');
-        if(phaseDetailsDiv) phaseDetailsDiv.innerHTML = '<p class="text-red-500">Error: Could not load phase details.</p>';
-        return;
+        const div = document.getElementById('phase-details'); if(div) div.innerHTML = '<p class="text-red-500">Error: Could not load phase details.</p>'; return;
     }
     const phaseDetailsDiv = document.getElementById('phase-details');
     const weekDetailsContainer = document.getElementById('week-details-container');
@@ -532,42 +618,31 @@ function renderPhaseDetails(phaseIndex) {
     const weekButtonsHtml = (phase.weeks && Array.isArray(phase.weeks)) ? phase.weeks.map((week, index) =>
         `<button class="week-button" data-phase-index="${phaseIndex}" data-week-index="${index}">Week ${week.weekNum}</button>`
     ).join('') : '<p>No weeks available for this phase.</p>';
-    const formattedDuration = formatPhaseDuration(phase.duration);
     if(phaseDetailsDiv) phaseDetailsDiv.innerHTML = `
         <div class="content-card">
-            <h3 class="text-lg sm:text-xl font-semibold mb-2">${phase.name} ${formattedDuration}</h3>
+            <h3 class="text-lg sm:text-xl font-semibold mb-2">${phase.name} ${formatPhaseDuration(phase.duration)}</h3>
             <p class="text-sm text-stone-600 mb-1"><strong>Goal:</strong> ${phase.goal || 'N/A'}</p>
             <p class="text-sm text-stone-600 mb-3"><strong>Mileage Range:</strong> ${phase.mileageRange || 'N/A'}</p>
             <h4 class="text-md font-medium text-stone-700 mb-2">Select a Week:</h4>
-            <div id="week-navigation-${phaseIndex}" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">
-                ${weekButtonsHtml}
-            </div>
-        </div>
-    `;
+            <div id="week-navigation-${phaseIndex}" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">${weekButtonsHtml}</div>
+        </div>`;
     document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(button => {
         button.addEventListener('click', (e) => {
             document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(btn => btn.classList.remove('active'));
             e.target.classList.add('active');
-            const pIdx = parseInt(e.target.dataset.phaseIndex);
-            const wIdx = parseInt(e.target.dataset.weekIndex);
-            renderWeekDetails(pIdx, wIdx);
+            renderWeekDetails(parseInt(e.target.dataset.phaseIndex), parseInt(e.target.dataset.weekIndex));
         });
     });
     if (phase.weeks && phase.weeks.length > 0) {
         const firstWeekButton = document.querySelector(`#week-navigation-${phaseIndex} .week-button`);
-        if (firstWeekButton) {
-            firstWeekButton.classList.add('active');
-            renderWeekDetails(phaseIndex, 0);
-        }
+        if (firstWeekButton) { firstWeekButton.classList.add('active'); renderWeekDetails(phaseIndex, 0); }
     }
 }
 
 function getDisplayKm(totalKmString) {
     if (!totalKmString || typeof totalKmString !== 'string') return 'N/A';
-    const rangeMatch = totalKmString.match(/(\d+)\s*-\s*(\d+)/);
-    if (rangeMatch) { return `${rangeMatch[2]}km`; }
-    const singleMatch = totalKmString.match(/(\d+)/);
-    if (singleMatch) { return `${singleMatch[1]}km`; }
+    const rangeMatch = totalKmString.match(/(\d+)\s*-\s*(\d+)/); if (rangeMatch) return `${rangeMatch[2]}km`;
+    const singleMatch = totalKmString.match(/(\d+)/); if (singleMatch) return `${singleMatch[1]}km`;
     return totalKmString; 
 }
 
@@ -575,52 +650,39 @@ function renderWeekDetails(phaseIndex, weekIndex) {
     if (!marathonPlan) return;
     const week = marathonPlan.phases[phaseIndex]?.weeks[weekIndex]; 
     if (!week) {
-        console.error("Week not found for phase index:", phaseIndex, "week index:", weekIndex);
-        const weekDetailsContainer = document.getElementById('week-details-container');
-        if(weekDetailsContainer) weekDetailsContainer.innerHTML = '<p class="text-red-500">Error: Could not load week details.</p>';
-        return;
+        const div = document.getElementById('week-details-container'); if(div) div.innerHTML = '<p class="text-red-500">Error: Could not load week details.</p>'; return;
     }
     const weekDetailsContainer = document.getElementById('week-details-container');
     const dayColors = ['bg-red-50', 'bg-orange-50', 'bg-amber-50', 'bg-yellow-50', 'bg-lime-50', 'bg-green-50', 'bg-emerald-50'];
-    let tableRowsHtml = '';
-    if (week.days && Array.isArray(week.days)) {
-        tableRowsHtml = week.days.map((day, index) => {
-            const parts = day.split(':');
-            const dayName = parts[0].trim();
-            const activity = parts.slice(1).join(':').trim();
-            const bgColor = dayColors[index % dayColors.length]; 
-            return `<tr class="${bgColor}">
-                        <td class="p-3 font-medium text-stone-800">${dayName}</td>
-                        <td class="p-3 text-stone-700">${activity}</td>
-                    </tr>`;
-        }).join('');
-    } else {
-        tableRowsHtml = '<tr><td colspan="2" class="p-3 text-stone-500">No daily schedule available.</td></tr>';
-    }
-    const displayKmValue = getDisplayKm(week.totalKm);
+    let tableRowsHtml = (week.days && Array.isArray(week.days)) ? week.days.map((day, index) => {
+        const parts = day.split(':'); const dayName = parts[0].trim(); const activity = parts.slice(1).join(':').trim();
+        return `<tr class="${dayColors[index % dayColors.length]}"><td class="p-3 font-medium text-stone-800">${dayName}</td><td class="p-3 text-stone-700">${activity}</td></tr>`;
+    }).join('') : '<tr><td colspan="2" class="p-3 text-stone-500">No daily schedule available.</td></tr>';
+    
     if(weekDetailsContainer) weekDetailsContainer.innerHTML = `
         <div class="content-card mt-4">
-            <h4 class="text-lg font-semibold text-sky-700 mb-2">Week ${week.weekNum}</h4>
-            <p class="text-sm text-stone-600 mb-3"><strong>Total Mileage:</strong> ${displayKmValue}</p>
+            <h4 class="text-lg font-semibold text-sky-700 mb-2">Week ${week.weekNum} (Total: ${getDisplayKm(week.totalKm)})</h4>
             <div class="overflow-x-auto rounded-lg border border-stone-200">
                 <table class="schedule-table min-w-full">
-                    <thead>
-                        <tr>
-                            <th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Day</th>
-                            <th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Activity</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-stone-200">
-                        ${tableRowsHtml}
-                    </tbody>
+                    <thead><tr><th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Day</th><th class="p-3 text-left text-xs font-semibold uppercase tracking-wider text-stone-600 bg-stone-100">Activity</th></tr></thead>
+                    <tbody class="divide-y divide-stone-200">${tableRowsHtml}</tbody>
                 </table>
             </div>
             ${week.notes ? `<p class="text-sm text-stone-600 italic mt-3 p-3 bg-stone-100 rounded-md"><strong>Notes:</strong> ${week.notes}</p>` : ''}
-        </div>
-    `;
+            <div class="mt-4">
+                 <button id="getWeeklyFocusBtn" class="ai-button" data-phase-index="${phaseIndex}" data-week-index="${weekIndex}">✨ Focus</button>
+                 <div id="weekly-focus-loading" class="hidden mt-2"><span class="gemini-loading-spinner"></span> Fetching insights...</div>
+                 <div id="weekly-focus-response" class="gemini-response-area hidden"></div>
+            </div>
+        </div>`;
+    document.getElementById('getWeeklyFocusBtn').addEventListener('click', (e) => {
+        const pIdx = parseInt(e.target.dataset.phaseIndex);
+        const wIdx = parseInt(e.target.dataset.weekIndex);
+        getWeeklyFocus(pIdx, wIdx);
+    });
 }
 
-// --- Calendar Tab ---
+
 function getActivityThumbnailClass(activityText) {
     const lowerActivity = activityText.toLowerCase();
     if (lowerActivity.includes("race day")) return "activity-thumbnail-race";
@@ -629,69 +691,51 @@ function getActivityThumbnailClass(activityText) {
     if (lowerActivity.startsWith("tempo")) return "activity-thumbnail-tempo";
     if (lowerActivity.startsWith("interval")) return "activity-thumbnail-interval";
     if (lowerActivity.startsWith("long run")) return "activity-thumbnail-long";
-    // "Base" is a phase, typically activities within it would be "Easy Run", "Long Run" etc.
-    // If an activity specifically starts with "Base Run" (unlikely with current data) it could be added.
-    // For now, other activities fall to default.
     return "activity-thumbnail-default"; 
 }
 
 function renderCalendarTab() {
     setActiveNav('nav-calendar');
     appContent.innerHTML = '';
-
     const calendarSection = document.createElement('section');
-    calendarSection.id = "calendar-content";
-    calendarSection.className = "space-y-6";
-
-    // Use currentRaceDate (which is initialized from localStorage or default) for the input value
+    calendarSection.id = "calendar-content"; calendarSection.className = "space-y-6";
     const raceDateValue = currentRaceDate ? currentRaceDate.toISOString().split('T')[0] : DEFAULT_RACE_DATE_STRING;
-
     calendarSection.innerHTML = `
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Training Calendar</h2>
             <div class="mb-6">
                 <label for="raceDateInput" class="block text-sm font-medium text-stone-700 mb-1">Select Your Race Date:</label>
-                <input type="date" id="raceDateInput" name="raceDateInput" value="${raceDateValue}"
-                       class="mt-1 block w-full md:w-1/2 px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
-                <p class="text-xs text-stone-500 mt-1">The calendar will schedule your training plan ending on this date.</p>
+                <input type="date" id="raceDateInput" name="raceDateInput" value="${raceDateValue}" class="mt-1 block w-full md:w-1/2 px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
+                <p class="text-xs text-stone-500 mt-1">Plan ends on this date.</p>
             </div>
             <div id="calendar-controls" class="flex justify-between items-center mb-4">
                 <button id="prevMonthBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm">&lt; Prev</button>
                 <h3 id="currentMonthYear" class="text-lg font-semibold text-stone-700"></h3>
                 <button id="nextMonthBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm">Next &gt;</button>
             </div>
-            <div id="calendar-grid-container" class="calendar-grid">
-                </div>
-        </div>
-    `;
+            <div id="calendar-grid-container" class="calendar-grid"></div>
+        </div>`;
     appContent.appendChild(calendarSection);
-
-    const raceDateInputEl = document.getElementById('raceDateInput');
-    raceDateInputEl.addEventListener('change', (event) => {
+    document.getElementById('raceDateInput').addEventListener('change', (event) => {
         const newRaceDate = new Date(event.target.value + 'T00:00:00'); 
         if (isValidDate(newRaceDate)) {
-            currentRaceDate = newRaceDate; // Update global currentRaceDate
+            currentRaceDate = newRaceDate;
             calculateAndStoreDatedTrainingPlan(newRaceDate);
             calendarCurrentDisplayDate = new Date(newRaceDate.getFullYear(), newRaceDate.getMonth(), 1);
             renderCalendarGrid();
-            if (document.getElementById('nav-overview').classList.contains('active')) { // If overview is active, re-render it to update today's training
-                 renderOverview();
+            if (document.getElementById('nav-overview').classList.contains('active')) {
+                 renderOverview(); 
             } else {
-                 renderTodaysTraining(); // Or just update the today's training data if another tab is active
+                 const today = new Date(); today.setHours(0,0,0,0);
+                 currentTodaysActivityForAI = datedTrainingPlan.find(item => {
+                    const itemDate = new Date(item.date); itemDate.setHours(0,0,0,0);
+                    return isSameDay(itemDate, today);
+                 });
             }
         }
     });
-    
-    document.getElementById('prevMonthBtn').addEventListener('click', () => {
-        calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() - 1);
-        renderCalendarGrid();
-    });
-    document.getElementById('nextMonthBtn').addEventListener('click', () => {
-        calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() + 1);
-        renderCalendarGrid();
-    });
-    
-    // Initial calendar render using the globally set calendarCurrentDisplayDate
+    document.getElementById('prevMonthBtn').addEventListener('click', () => { calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() - 1); renderCalendarGrid(); });
+    document.getElementById('nextMonthBtn').addEventListener('click', () => { calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() + 1); renderCalendarGrid(); });
     renderCalendarGrid();
 }
 
@@ -699,127 +743,66 @@ function renderCalendarGrid() {
     const gridContainer = document.getElementById('calendar-grid-container');
     const monthYearDisplay = document.getElementById('currentMonthYear');
     if (!gridContainer || !monthYearDisplay) return;
-
     gridContainer.innerHTML = ''; 
-
-    const year = calendarCurrentDisplayDate.getFullYear();
-    const month = calendarCurrentDisplayDate.getMonth(); 
-
+    const year = calendarCurrentDisplayDate.getFullYear(); const month = calendarCurrentDisplayDate.getMonth(); 
     monthYearDisplay.textContent = calendarCurrentDisplayDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const firstDayOfMonth = new Date(year, month, 1); const lastDayOfMonth = new Date(year, month + 1, 0);
     const daysInMonth = lastDayOfMonth.getDate();
-    let startingDayOfWeek = firstDayOfMonth.getDay(); 
-    if (startingDayOfWeek === 0) startingDayOfWeek = 6; // Sunday is 0, make it 6 (0-Mon, 6-Sun)
-    else startingDayOfWeek--; // Adjust other days
-
+    let startingDayOfWeek = firstDayOfMonth.getDay(); if (startingDayOfWeek === 0) startingDayOfWeek = 6; else startingDayOfWeek--;
     const dayHeaders = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    dayHeaders.forEach(header => {
-        const headerCell = document.createElement('div');
-        headerCell.className = 'calendar-header';
-        headerCell.textContent = header;
-        gridContainer.appendChild(headerCell);
-    });
-
-    for (let i = 0; i < startingDayOfWeek; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.className = 'calendar-day other-month';
-        gridContainer.appendChild(emptyCell);
-    }
-
-    const today = new Date();
-    today.setHours(0,0,0,0); // Normalize today for comparison
-
+    dayHeaders.forEach(header => { const hc = document.createElement('div'); hc.className = 'calendar-header'; hc.textContent = header; gridContainer.appendChild(hc); });
+    for (let i = 0; i < startingDayOfWeek; i++) { const ec = document.createElement('div'); ec.className = 'calendar-day other-month'; gridContainer.appendChild(ec); }
+    const today = new Date(); today.setHours(0,0,0,0);
     for (let day = 1; day <= daysInMonth; day++) {
-        const cell = document.createElement('div');
-        cell.className = 'calendar-day';
-        const currentDateInLoop = new Date(year, month, day);
-        currentDateInLoop.setHours(0,0,0,0); // Normalize for comparison
-
-        if (isSameDay(currentDateInLoop, today)) {
-            cell.classList.add('is-today');
-        }
-
-        let dayNumberSpan = `<span class="day-number">${day}</span>`;
+        const cell = document.createElement('div'); cell.className = 'calendar-day';
+        const currentDateInLoop = new Date(year, month, day); currentDateInLoop.setHours(0,0,0,0);
+        if (isSameDay(currentDateInLoop, today)) cell.classList.add('is-today');
         let activityHtml = '';
-
         if (datedTrainingPlan.length > 0) {
-            const activityForDay = datedTrainingPlan.find(item => {
-                const itemDate = new Date(item.date);
-                itemDate.setHours(0,0,0,0); // Normalize item date
-                return isSameDay(itemDate, currentDateInLoop);
-            });
+            const activityForDay = datedTrainingPlan.find(item => { const id = new Date(item.date); id.setHours(0,0,0,0); return isSameDay(id, currentDateInLoop); });
             if (activityForDay) {
                 let activityText = activityForDay.activity.replace(/^[^:]+:\s*/, ''); 
-                const thumbnailClass = getActivityThumbnailClass(activityText);
-                activityHtml = `<span class="activity-thumbnail ${thumbnailClass}">${activityText.substring(0,12)}${activityText.length > 12 ? '...' : ''}</span>`;
+                activityHtml = `<span class="activity-thumbnail ${getActivityThumbnailClass(activityText)}">${activityText.substring(0,12)}${activityText.length > 12 ? '...' : ''}</span>`;
             }
         }
-        cell.innerHTML = dayNumberSpan + activityHtml;
+        cell.innerHTML = `<span class="day-number">${day}</span>` + activityHtml;
         gridContainer.appendChild(cell);
     }
 }
 
-
-// --- Pace Utilities Tab ---
 function renderPaceUtilities() {
     setActiveNav('nav-utils');
     appContent.innerHTML = ''; 
     const paceUtilsSection = document.createElement('section');
-    paceUtilsSection.id = "pace-utils-content";
-    paceUtilsSection.className = "space-y-6";
+    paceUtilsSection.id = "pace-utils-content"; paceUtilsSection.className = "space-y-6";
     paceUtilsSection.innerHTML = `
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Training Zone & Repeats Pace Calculator</h2>
             <div class="mb-6">
                 <label for="lt2speed" class="block text-sm font-medium text-stone-700 mb-1">Enter LT2 Speed (pace per km):</label>
-                <input type="text" id="lt2speed" name="lt2speed" placeholder="e.g., 4:30"
-                       class="mt-1 block w-full px-4 py-3 border border-stone-300 rounded-lg shadow-sm sm:text-sm transition duration-150 ease-in-out">
+                <input type="text" id="lt2speed" name="lt2speed" placeholder="e.g., 4:30" class="mt-1 block w-full px-4 py-3 border border-stone-300 rounded-lg shadow-sm sm:text-sm transition duration-150 ease-in-out">
                 <div id="error-message-calc" class="text-red-500 text-sm mt-2 h-5"></div>
             </div>
-            <button onclick="calculatePacesFromUtil()"
-                    class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 transition duration-150 ease-in-out transform hover:scale-105">
-                Calculate Zones & Repeats Paces
-            </button>
+            <button onclick="calculatePacesFromUtil()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 transition duration-150 ease-in-out transform hover:scale-105">Calculate Zones & Repeats Paces</button>
             <div class="mt-8 md:flex md:space-x-6">
-                <div id="zones-section-util" class="flex-1">
-                    <h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Training Zones:</h3>
-                    <div id="zones-content-util">
-                        <p class="text-stone-500 italic text-sm">Enter your LT2 speed and click calculate.</p>
-                    </div>
-                </div>
-                <div id="repeats-section-util" class="flex-1 mt-8 md:mt-0">
-                    <h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Repeats Paces:</h3>
-                    <div id="repeats-content-util">
-                        <p class="text-stone-500 italic text-sm">Calculated based on your LT2 speed.</p>
-                    </div>
-                </div>
+                <div id="zones-section-util" class="flex-1"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Training Zones:</h3><div id="zones-content-util"><p class="text-stone-500 italic text-sm">Enter LT2 speed and click calculate.</p></div></div>
+                <div id="repeats-section-util" class="flex-1 mt-8 md:mt-0"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Repeats Paces:</h3><div id="repeats-content-util"><p class="text-stone-500 italic text-sm">Calculated based on LT2 speed.</p></div></div>
             </div>
-        </div>
-    `;
+        </div>`;
     appContent.appendChild(paceUtilsSection);
-     document.getElementById('lt2speed').addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault(); 
-            calculatePacesFromUtil();
-        }
-    });
+    document.getElementById('lt2speed').addEventListener('keypress', (event) => { if (event.key === 'Enter') { event.preventDefault(); calculatePacesFromUtil(); }});
 }
 
 function parsePaceToSeconds(paceString) { 
     if (!paceString || typeof paceString !== 'string') return NaN;
-    const parts = paceString.trim().split(':');
-    if (parts.length !== 2) return NaN;
-    const minutes = parseInt(parts[0], 10);
-    const seconds = parseInt(parts[1], 10);
+    const parts = paceString.trim().split(':'); if (parts.length !== 2) return NaN;
+    const minutes = parseInt(parts[0], 10); const seconds = parseInt(parts[1], 10);
     if (isNaN(minutes) || isNaN(seconds) || minutes < 0 || seconds < 0 || seconds >= 60) return NaN;
     return (minutes * 60) + seconds;
 }
 function formatSecondsToPace(totalSeconds) { 
     if (isNaN(totalSeconds) || totalSeconds < 0) return "N/A";
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = Math.round(totalSeconds % 60); 
+    const minutes = Math.floor(totalSeconds / 60); const seconds = Math.round(totalSeconds % 60); 
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 function calculatePacesFromUtil() { 
@@ -832,65 +815,51 @@ function calculatePacesFromUtil() {
     if(errorMessageDivCalc) errorMessageDivCalc.textContent = ''; 
     const lt2SpeedInSeconds = parsePaceToSeconds(lt2SpeedInput);
     if (isNaN(lt2SpeedInSeconds) || lt2SpeedInSeconds <= 0) {
-        if(errorMessageDivCalc) errorMessageDivCalc.textContent = 'Invalid LT2 speed. Use mm:ss format (e.g., 4:30). Pace must be positive.';
-        zonesContentDiv.innerHTML = '<p class="text-red-500 italic text-sm">Could not calculate zones due to invalid input.</p>';
-        repeatsContentDiv.innerHTML = '<p class="text-red-500 italic text-sm">Could not calculate repeats paces due to invalid LT2 input.</p>';
-        return;
+        if(errorMessageDivCalc) errorMessageDivCalc.textContent = 'Invalid LT2 speed. Use mm:ss format (e.g., 4:30).';
+        zonesContentDiv.innerHTML = '<p class="text-red-500 italic text-sm">Invalid input.</p>';
+        repeatsContentDiv.innerHTML = '<p class="text-red-500 italic text-sm">Invalid LT2 input.</p>'; return;
     }
     const zonesData = [
-        { name: "Zone 1", descriptor: "Easy/Recovery", lowPaceFactor: 1.54, highPaceFactor: 1.33, colorClass: "text-green-600" }, 
-        { name: "Zone 2", descriptor: "Aerobic/Base", lowPaceFactor: 1.32, highPaceFactor: 1.16, colorClass: "text-sky-600" }, 
-        { name: "Zone 3", descriptor: "Tempo/Marathon", lowPaceFactor: 1.15, highPaceFactor: 1.01, colorClass: "text-lime-600" }, 
-        { name: "Zone 4", descriptor: "Threshold", lowPaceFactor: 1.00, highPaceFactor: 0.91, colorClass: "text-amber-500" }, 
-        { name: "Zone 5", descriptor: "VO2 Max", lowPaceFactor: 0.90, highPaceFactor: 0.83, colorClass: "text-red-600" } 
+        { name: "Z1", descriptor: "Easy/Rec", lowPaceFactor: 1.54, highPaceFactor: 1.33, colorClass: "text-green-600" }, 
+        { name: "Z2", descriptor: "Aerobic", lowPaceFactor: 1.32, highPaceFactor: 1.16, colorClass: "text-sky-600" }, 
+        { name: "Z3", descriptor: "Tempo/MP", lowPaceFactor: 1.15, highPaceFactor: 1.01, colorClass: "text-lime-600" }, 
+        { name: "Z4", descriptor: "Threshold", lowPaceFactor: 1.00, highPaceFactor: 0.91, colorClass: "text-amber-500" }, 
+        { name: "Z5", descriptor: "VO2 Max", lowPaceFactor: 0.90, highPaceFactor: 0.83, colorClass: "text-red-600" } 
     ];
-    const racePaceInfo = { name: "Marathon Pace (Est.)", descriptor: "", lowPaceFactor: 1.15, highPaceFactor: 1.10, colorClass: "text-purple-600" };
+    const racePaceInfo = { name: "MP (Est.)", descriptor: "", lowPaceFactor: 1.15, highPaceFactor: 1.10, colorClass: "text-purple-600" };
     zonesContentDiv.innerHTML = ''; 
-    const zonesTable = document.createElement('table');
-    zonesTable.classList.add('data-table', 'text-sm', 'w-full');
-    zonesTable.innerHTML = `<thead><tr><th class="bg-stone-100 text-left p-2">Zone</th><th class="bg-stone-100 text-left p-2">Pace Range (/km)</th></tr></thead><tbody></tbody>`;
+    const zonesTable = document.createElement('table'); zonesTable.className = 'data-table text-sm w-full';
+    zonesTable.innerHTML = `<thead><tr><th class="p-2">Zone</th><th class="p-2">Pace/km</th></tr></thead><tbody></tbody>`;
     const zonesTbody = zonesTable.querySelector('tbody');
     [...zonesData, racePaceInfo].forEach(zone => {
-        const slowerPaceSeconds = lt2SpeedInSeconds * zone.lowPaceFactor;
-        const fasterPaceSeconds = lt2SpeedInSeconds * zone.highPaceFactor;
+        const sPS = lt2SpeedInSeconds*zone.lowPaceFactor; const fPS = lt2SpeedInSeconds*zone.highPaceFactor;
         const row = zonesTbody.insertRow();
-        row.insertCell().innerHTML = `<strong class="${zone.colorClass}">${zone.name} ${zone.descriptor ? '['+zone.descriptor+']' : ''}</strong>`;
-        row.insertCell().textContent = `${formatSecondsToPace(fasterPaceSeconds)} - ${formatSecondsToPace(slowerPaceSeconds)}`;
+        row.insertCell().innerHTML = `<strong class="${zone.colorClass}">${zone.name} ${zone.descriptor?'['+zone.descriptor+']':''}</strong>`;
+        row.insertCell().textContent = `${formatSecondsToPace(fPS)} - ${formatSecondsToPace(sPS)}`;
     });
     zonesContentDiv.appendChild(zonesTable);
-    zonesContentDiv.insertAdjacentHTML('beforeend', '<p class="text-xs text-stone-500 mt-2">Pace factors are estimates. Adjust based on feel and specific training goals.</p>');
+    zonesContentDiv.insertAdjacentHTML('beforeend', '<p class="text-xs text-stone-500 mt-2">Estimates. Adjust to feel.</p>');
     const repeatDistances = [
-        { distance: "3000m", paceFactor: 1.02 }, { distance: "1600m (Mile)", paceFactor: 0.98 }, 
-        { distance: "1000m", paceFactor: 0.95 }, { distance: "800m",  paceFactor: 0.92 },
-        { distance: "400m",  paceFactor: 0.88 }, { distance: "200m",  paceFactor: 0.85 }
+        {d:"3km",f:1.02,m:3},{d:"1 Mile",f:0.98,m:1.60934},{d:"1km",f:0.95,m:1},
+        {d:"800m",f:0.92,m:0.8},{d:"400m",f:0.88,m:0.4},{d:"200m",f:0.85,m:0.2}
     ];
     repeatsContentDiv.innerHTML = ''; 
-    const repeatsTable = document.createElement('table');
-    repeatsTable.classList.add('data-table', 'text-sm', 'w-full');
-    repeatsTable.innerHTML = `<thead><tr><th class="bg-stone-100 text-left p-2">Distance</th><th class="bg-stone-100 text-left p-2">Target Time per Repeat</th><th class="bg-stone-100 text-left p-2">Equivalent Pace (/km)</th></tr></thead><tbody></tbody>`;
-    const repeatsTbody = repeatsTable.querySelector('tbody');
+    const repeatsTable = document.createElement('table'); repeatsTable.className = 'data-table text-sm w-full';
+    repeatsTable.innerHTML = `<thead><tr><th class="p-2">Dist.</th><th class="p-2">Time</th><th class="p-2">Pace/km</th></tr></thead><tbody></tbody>`;
+    const rTbody = repeatsTable.querySelector('tbody');
     repeatDistances.forEach(item => {
-        const targetPacePerKmSeconds = lt2SpeedInSeconds * item.paceFactor;
-        let distanceMultiplier = 1; 
-        if (item.distance === "3000m") distanceMultiplier = 3;
-        else if (item.distance === "1600m (Mile)") distanceMultiplier = 1.60934; 
-        else if (item.distance === "1000m") distanceMultiplier = 1;
-        else if (item.distance === "800m") distanceMultiplier = 0.8;
-        else if (item.distance === "400m") distanceMultiplier = 0.4;
-        else if (item.distance === "200m") distanceMultiplier = 0.2;
-        const targetTimeForDistanceSeconds = targetPacePerKmSeconds * distanceMultiplier;
-        const row = repeatsTbody.insertRow();
-        row.insertCell().innerHTML = `<strong class="text-teal-700">${item.distance}</strong>`;
-        row.insertCell().textContent = formatSecondsToPace(targetTimeForDistanceSeconds);
-        row.insertCell().textContent = formatSecondsToPace(targetPacePerKmSeconds);
+        const tPPS = lt2SpeedInSeconds*item.f; const tTDS = tPPS*item.m;
+        const row = rTbody.insertRow();
+        row.insertCell().innerHTML = `<strong class="text-teal-700">${item.d}</strong>`;
+        row.insertCell().textContent = formatSecondsToPace(tTDS);
+        row.insertCell().textContent = formatSecondsToPace(tPPS);
     });
     repeatsContentDiv.appendChild(repeatsTable);
-    repeatsContentDiv.insertAdjacentHTML('beforeend', '<p class="text-xs text-stone-500 mt-2">Target times are estimates. Adjust based on the number of reps and recovery.</p>');
+    repeatsContentDiv.insertAdjacentHTML('beforeend', '<p class="text-xs text-stone-500 mt-2">Estimates. Adjust reps/recovery.</p>');
 }
 
 // --- Initial Load ---
 fetchMarathonPlan();
-// Script end
 </script>
 </body>
 </html>
