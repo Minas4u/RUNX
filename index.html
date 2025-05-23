@@ -3,38 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Helios Marathon Plan & Tools</title>
+    <title>project: Marathon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f5f5f4; /* stone-100 */
-            color: #292524; /* stone-800 */
+            background-color: #f5f5f4; 
+            color: #292524; 
         }
         .main-container {
-            background-color: #ffffff; /* white */
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); /* shadow-2xl */
+            background-color: #ffffff; 
+            border-radius: 0.75rem; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
         }
         .nav-button {
             padding: 0.5rem 1rem;
-            border-radius: 0.375rem; /* rounded-md */
+            border-radius: 0.375rem; 
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
             font-weight: 500;
         }
         .nav-button.active {
-            background-color: #0284c7; /* sky-600 */
+            background-color: #0284c7; 
             color: white;
         }
         .nav-button:not(.active):hover {
-            background-color: #e0f2fe; /* sky-100 */
-            color: #0369a1; /* sky-700 */
+            background-color: #e0f2fe; 
+            color: #0369a1; 
         }
         .phase-button {
             padding: 0.5rem 1rem;
-            border-radius: 0.375rem; /* rounded-md */
+            border-radius: 0.375rem; 
             border-width: 1px;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
             font-weight: 500;
@@ -52,17 +52,17 @@
         .phase-button-taper:hover:not(.active) { background-color: #fee2e2; }
         .phase-button-taper.active { background-color: #dc2626; color: white; border-color: #dc2626; }
         .week-button {
-            padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: 1px solid #9ca3af; /* gray-400 */
-            color: #374151; /* gray-700 */ font-weight: 500; text-align: center;
+            padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: 1px solid #9ca3af; 
+            color: #374151; font-weight: 500; text-align: center;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
         .week-button.active { background-color: #0d9488; color: white; border-color: #0d9488; }
         .week-button:not(.active):hover { background-color: #f0fdfa; border-color: #14b8a6; }
         .content-card {
-            background-color: #fafaf9; /* stone-50 */ padding: 1rem; /* p-4 */
-            border-radius: 0.5rem; /* rounded-lg */ border: 1px solid #e7e5e4; /* stone-200 */
+            background-color: #fafaf9; padding: 1rem; 
+            border-radius: 0.5rem; border: 1px solid #e7e5e4; 
         }
-        .content-card h3 { color: #0d9488; /* teal-600 */ }
+        .content-card h3 { color: #0d9488; }
         .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 350px; } }
         .data-table { width: 100%; margin-top: 0.5rem; border-collapse: collapse; font-size: 0.875rem; }
@@ -74,7 +74,7 @@
         .schedule-table tr:last-child td { border-bottom: none; }
         .schedule-table td:first-child { font-weight: 500; width: 25%; max-width: 100px; }
         input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus {
-            outline: 2px solid transparent; outline-offset: 2px; border-color: #0ea5e9; /* sky-500 */
+            outline: 2px solid transparent; outline-offset: 2px; border-color: #0ea5e9; 
             box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
         }
         .header-logo-container { display: inline-block; padding: 0.75rem; background-color: #0284c7; border-radius: 0.5rem; }
@@ -110,14 +110,14 @@
         #todays-training-card { border-left: 4px solid #0ea5e9; }
         
         .gemini-response-area {
-            margin-top: 1rem; padding: 0.75rem; background-color: #e0f2fe; /* sky-100 */
-            border-radius: 0.375rem; /* rounded-md */ border: 1px solid #bae6fd; /* sky-200 */
-            font-size: 0.875rem; color: #0c4a6e; /* sky-800 */
+            margin-top: 1rem; padding: 0.75rem; background-color: #e0f2fe; 
+            border-radius: 0.375rem; border: 1px solid #bae6fd; 
+            font-size: 0.875rem; color: #0c4a6e; 
             max-height: 200px; overflow-y: auto;
         }
         .gemini-response-area p { margin-bottom: 0.5rem;}
-        .gemini-response-area strong { color: #0369a1; /* sky-700 */ }
-        .gemini-response-area ul { margin-left: 1.25rem; } /* Indent lists */
+        .gemini-response-area strong { color: #0369a1; }
+        .gemini-response-area ul { margin-left: 1.25rem; } 
         .gemini-loading-spinner {
             display: inline-block; width: 1rem; height: 1rem; border-radius: 50%;
             border: 2px solid currentColor; border-top-color: transparent;
@@ -126,24 +126,94 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .ai-button {
-            background-color: #7c3aed; /* violet-600 */ color: white;
+            background-color: #7c3aed; color: white;
             padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 500;
             transition: background-color 0.2s;
         }
-        .ai-button:hover { background-color: #6d28d9; /* violet-700 */ }
+        .ai-button:hover { background-color: #6d28d9; }
+
+        .main-title {
+            font-weight: 800; 
+            letter-spacing: -0.025em; 
+        }
+        .title-project {
+            color: #f59e0b; 
+        }
+        .title-marathon {
+            color: #0284c7; 
+        }
+        .time-point-label {
+            font-weight: 500;
+            color: #075985; 
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem; 
+            background-color: #e0f2fe; 
+            text-align: center;
+            border: 1px solid #7dd3fc; 
+        }
+        .result-default { color: #374151; }
+        .result-blue {
+            background-color: #cfe2ff; 
+            border-left-width: 4px;
+            border-color: #3b82f6; 
+            color: #1e3a8a; 
+        }
+        .result-yellow {
+            background-color: #fef9c3; 
+            border-left-width: 4px;
+            border-color: #facc15; 
+            color: #713f12; 
+        }
+        .result-red {
+            background-color: #fee2e2; 
+            border-left-width: 4px;
+            border-color: #f87171; 
+            color: #7f1d1d; 
+        }
+        .error-display {
+            background-color: #fecaca; 
+            border-left-width: 4px;
+            border-color: #ef4444; 
+            color: #7f1d1d; 
+        }
+        #cardiacDriftAiInsightsButton {
+            background-color: #2563eb; 
+        }
+        #cardiacDriftAiInsightsButton:hover {
+            background-color: #1d4ed8; 
+        }
+        #cardiacDriftAiResponseArea {
+            background-color: #f9fafb; 
+            border: 1px solid #e5e7eb; 
+            color: #374151; 
+        }
+        .loader {
+            border: 4px solid #f3f3f3; 
+            border-top: 4px solid #3b82f6; 
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
     </style>
 </head>
 <body class="min-h-screen p-4 py-8">
     <div class="main-container w-full max-w-5xl mx-auto p-6 sm:p-8">
-        <header class="mb-6 sm:mb-8 text-center">
-            <div class="header-logo-container">
+        <header class="mb-8 text-center"> 
+            <div class="header-logo-container mb-4"> 
                 <img src="https://iliosports.com/wp-content/uploads/2021/03/logo-13.png"
                      alt="Helios Running Team Logo"
                      class="header-logo"
                      onerror="this.parentElement.innerHTML='<h1 class=\'text-2xl sm:text-3xl font-bold text-white\'>Helios Running</h1>'">
             </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-stone-800 mt-4">Marathon Plan & Tools</h1>
-            <p class="text-stone-600">Your interactive guide to marathon training and pace utilities.</p>
+            <h1 class="text-3xl sm:text-4xl main-title text-stone-800 mt-2"> 
+                <span class="title-project">project:</span> <span class="title-marathon">Marathon</span>
+            </h1>
+            <p class="text-stone-600 mt-2 text-lg"> 
+                Your interactive guide to marathon training.
+            </p>
         </header>
 
         <nav class="mb-8 flex flex-wrap justify-center gap-2 sm:gap-4 border-b border-stone-300 pb-4">
@@ -166,29 +236,27 @@
     </div>
 
 <script>
-// --- Configuration ---
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUePACew4T4yiaL5oRqXSobZHb6m-ONujQirZoARs4t7ILJpRbjAz-N1HLtOPZKw-/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyQmt9LxRbebVlLYmd_YFy4IyvolljbFay2eWEY3CJXO4xA8okumVenUgxqa4jI3chk/exec'; 
 const DEFAULT_RACE_DATE_STRING = '2025-11-09';
 
-// --- Global Variables ---
 let marathonPlan = null;
 let datedTrainingPlan = [];
 let currentRaceDate = null;
 let calendarCurrentDisplayDate = new Date();
-let currentTodaysActivityForAI = null; // Store today's activity for AI advice
+let currentTodaysActivityForAI = null; 
 
 const appContent = document.getElementById('app-content');
 const loadingMessageDiv = document.getElementById('loading-message');
 const errorMessageDiv = document.getElementById('error-message');
 let mileageChartInstance = null;
+let currentCardiacDriftAiPrompt = "";
 
-// --- Gemini API Helper ---
+
 async function callGeminiApi(prompt, targetElementId, loadingElementId) {
     const targetElement = document.getElementById(targetElementId);
     const loadingIndicator = document.getElementById(loadingElementId);
 
     if (!targetElement || !loadingIndicator) {
-        console.error("Gemini API: Target or loading element not found for", targetElementId);
         if (targetElement) targetElement.innerHTML = "<p>Error: UI element missing.</p>";
         return;
     }
@@ -200,7 +268,7 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
 
     let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
     const payload = { contents: chatHistory };
-    const apiKey = ""; // Left empty for Canvas to handle
+    const apiKey = ""; 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     try {
@@ -212,7 +280,6 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            console.error("Gemini API Error Response:", errorData);
             throw new Error(`API request failed with status ${response.status}: ${errorData?.error?.message || response.statusText}`);
         }
 
@@ -222,20 +289,17 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
             result.candidates[0].content && result.candidates[0].content.parts &&
             result.candidates[0].content.parts.length > 0) {
             let text = result.candidates[0].content.parts[0].text;
-            // Basic Markdown to HTML conversion (bold and lists)
-            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Bold
-            text = text.replace(/\n\s*[\*-]\s(.*?)(?=\n\s*[\*-]|\n\n|$)/g, '<li>$1</li>'); // Unordered/Ordered list items (handles * and -)
-            text = text.replace(/(\<li>.*?<\/li>)+/gs, '<ul>$1</ul>'); // Wrap list items in <ul>
-            text = text.replace(/\n/g, '<br>'); // Newlines to <br>
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
+            text = text.replace(/\n\s*[\*-]\s(.*?)(?=\n\s*[\*-]|\n\n|$)/g, '<li>$1</li>'); 
+            text = text.replace(/(\<li>.*?<\/li>)+/gs, '<ul>$1</ul>'); 
+            text = text.replace(/\n/g, '<br>'); 
             targetElement.innerHTML = text;
             targetElement.classList.remove('hidden');
         } else {
-            console.error("Gemini API: Unexpected response structure or no content.", result);
             targetElement.innerHTML = "<p>Sorry, I couldn't get a response. Please try again.</p>";
             targetElement.classList.remove('hidden');
         }
     } catch (error) {
-        console.error('Error calling Gemini API:', error);
         targetElement.innerHTML = `<p>An error occurred: ${error.message}. Check the console for details.</p>`;
         targetElement.classList.remove('hidden');
     } finally {
@@ -244,10 +308,9 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
 }
 
 
-// --- Data Fetching and Initialization ---
 async function fetchMarathonPlan() {
     try {
-        const response = await fetch(WEB_APP_URL);
+        const response = await fetch(WEB_APP_URL); 
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Network response was not ok: ${response.status} ${response.statusText}. Details: ${errorText}`);
@@ -260,7 +323,6 @@ async function fetchMarathonPlan() {
             !data.paceGuide || !data.paceGuide.title || !Array.isArray(data.paceGuide.paces) ||
             !data.generalNotes || !data.generalNotes.title || !Array.isArray(data.generalNotes.notes) ||
             !Array.isArray(data.phases)) {
-            console.error("Fetched data is missing essential properties or has an unexpected structure:", data);
             throw new Error("Fetched data is incomplete. Check Apps Script `doGet` and Google Sheet structure.");
         }
         marathonPlan = data;
@@ -281,7 +343,6 @@ async function fetchMarathonPlan() {
         
         initializeApp();
     } catch (error) {
-        console.error('Failed to fetch marathon plan:', error);
         if(loadingMessageDiv) loadingMessageDiv.classList.add('hidden');
         if(errorMessageDiv) {
             errorMessageDiv.textContent = `Error loading training plan: ${error.message}. Please ensure the Google Sheet is accessible and the Apps Script is deployed correctly.`;
@@ -355,7 +416,6 @@ function calculateAndStoreDatedTrainingPlan(raceDateInput) {
     }
 }
 
-// --- AI Feature for Today's Training ---
 function getTodaysTrainingAdvice() {
     if (!currentTodaysActivityForAI) {
         const responseDiv = document.getElementById('todays-advice-response');
@@ -370,7 +430,7 @@ function getTodaysTrainingAdvice() {
 
     const activityDetails = currentTodaysActivityForAI;
     const activityType = activityDetails.activity.toLowerCase();
-    let specificAdviceHint = ""; // This will guide the English prompt for more specific advice.
+    let specificAdviceHint = ""; 
 
     if (activityType.includes("interval")) {
         specificAdviceHint = "For these intervals, emphasize starting the first few repeats at a controlled effort before increasing intensity. Also, mention the importance of recovery between intervals, and proper warm-up and cool-down.";
@@ -384,7 +444,6 @@ function getTodaysTrainingAdvice() {
         specificAdviceHint = "For this rest/active recovery/cross-train day, emphasize its importance for muscle repair, preventing overtraining, and overall recovery in the training process. Suggest light activities if it's active recovery or cross-training.";
     }
 
-
     const prompt = `
         My marathon training plan for today (${formatDate(activityDetails.date, {weekday: 'long', month: 'long', day: 'numeric'})}) is:
         Activity: ${activityDetails.activity.replace(/^[^:]+:\s*/, '')}
@@ -395,7 +454,7 @@ function getTodaysTrainingAdvice() {
         Please provide concise, actionable advice for this specific training session. 
         ${specificAdviceHint}
         Keep it positive and encouraging. Format as a bulleted list if appropriate.
-        **Respond ONLY in Greek. Do not include any English text in your response.**
+        **Your entire response must be ONLY in Greek. Do not include any English text, introductions, or conversational filler.**
     `;
     callGeminiApi(prompt, 'todays-advice-response', 'todays-advice-loading');
 }
@@ -452,34 +511,6 @@ function renderTodaysTraining() {
     }
 }
 
-// --- AI Feature for Weekly Focus (Training Plan Tab) ---
-function getWeeklyFocus(phaseIndex, weekIndex) {
-    if (!marathonPlan || !marathonPlan.phases[phaseIndex] || !marathonPlan.phases[phaseIndex].weeks[weekIndex]) {
-        const responseDiv = document.getElementById('weekly-focus-response');
-        if (responseDiv) responseDiv.innerHTML = "<p>Could not retrieve week data to generate focus.</p>";
-        return;
-    }
-    const weekData = marathonPlan.phases[phaseIndex].weeks[weekIndex];
-    const activities = weekData.days.join("\n");
-    const notes = weekData.notes || "No specific notes for this week.";
-
-    const prompt = `
-        I am in a marathon training plan. For Week ${weekData.weekNum} of the "${marathonPlan.phases[phaseIndex].name}" phase, my schedule is:
-        ${activities}
-        Weekly notes: ${notes}
-        Total weekly mileage is about: ${weekData.totalKm}.
-
-        Please provide a short, motivational "Weekly Focus & Pep Talk". 
-        Highlight 1-2 key workouts and their importance for marathon training. 
-        Offer some encouragement and general advice for tackling this week successfully.
-        Keep it concise and positive. Format as a bulleted list where appropriate.
-        **Respond ONLY in Greek. Do not include any English text in your response.**
-    `;
-    callGeminiApi(prompt, 'weekly-focus-response', 'weekly-focus-loading');
-}
-
-
-// --- Plan Overview Tab ---
 function renderOverview() {
     if (!marathonPlan) return;
     setActiveNav('nav-overview');
@@ -490,17 +521,11 @@ function renderOverview() {
 
     overviewSection.innerHTML = `
         <div id="todays-training-card" class="content-card p-4 mb-6">
-            <div id="todays-training-content"></div> </div>
+            <div id="todays-training-content"></div> 
+        </div>
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.philosophy.title || 'Training Philosophy'}</h2>
             ${createHtmlList(marathonPlan.philosophy.content)}
-        </div>
-        <div class="content-card">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">Overall Mileage Progression</h2>
-            <div class="chart-container bg-white p-2 rounded-md shadow">
-                <canvas id="mileageChart"></canvas>
-            </div>
-            <p class="text-xs text-stone-500 mt-2 text-center">Hover over points to see weekly mileage.</p>
         </div>
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.paceGuide.title || 'Pace Guide'}</h2>
@@ -510,8 +535,16 @@ function renderOverview() {
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.generalNotes.title || 'Important Notes'}</h2>
             ${createHtmlList(marathonPlan.generalNotes.notes)}
         </div>
-    `;
+        <div class="content-card">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">Overall Mileage Progression</h2>
+            <div class="chart-container bg-white p-2 rounded-md shadow">
+                <canvas id="mileageChart"></canvas>
+            </div>
+            <p class="text-xs text-stone-500 mt-2 text-center">Hover over points to see weekly mileage.</p>
+        </div>
+        `;
     appContent.appendChild(overviewSection);
+    
     renderTodaysTraining(); 
     renderMileageChart();
 }
@@ -669,17 +702,7 @@ function renderWeekDetails(phaseIndex, weekIndex) {
                 </table>
             </div>
             ${week.notes ? `<p class="text-sm text-stone-600 italic mt-3 p-3 bg-stone-100 rounded-md"><strong>Notes:</strong> ${week.notes}</p>` : ''}
-            <div class="mt-4">
-                 <button id="getWeeklyFocusBtn" class="ai-button" data-phase-index="${phaseIndex}" data-week-index="${weekIndex}">✨ Focus</button>
-                 <div id="weekly-focus-loading" class="hidden mt-2"><span class="gemini-loading-spinner"></span> Fetching insights...</div>
-                 <div id="weekly-focus-response" class="gemini-response-area hidden"></div>
-            </div>
         </div>`;
-    document.getElementById('getWeeklyFocusBtn').addEventListener('click', (e) => {
-        const pIdx = parseInt(e.target.dataset.phaseIndex);
-        const wIdx = parseInt(e.target.dataset.weekIndex);
-        getWeeklyFocus(pIdx, wIdx);
-    });
 }
 
 
@@ -774,7 +797,9 @@ function renderPaceUtilities() {
     setActiveNav('nav-utils');
     appContent.innerHTML = ''; 
     const paceUtilsSection = document.createElement('section');
-    paceUtilsSection.id = "pace-utils-content"; paceUtilsSection.className = "space-y-6";
+    paceUtilsSection.id = "pace-utils-content";
+    paceUtilsSection.className = "space-y-6";
+
     paceUtilsSection.innerHTML = `
         <div class="content-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Training Zone & Repeats Pace Calculator</h2>
@@ -788,9 +813,51 @@ function renderPaceUtilities() {
                 <div id="zones-section-util" class="flex-1"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Training Zones:</h3><div id="zones-content-util"><p class="text-stone-500 italic text-sm">Enter LT2 speed and click calculate.</p></div></div>
                 <div id="repeats-section-util" class="flex-1 mt-8 md:mt-0"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Repeats Paces:</h3><div id="repeats-content-util"><p class="text-stone-500 italic text-sm">Calculated based on LT2 speed.</p></div></div>
             </div>
-        </div>`;
+        </div>
+
+        <div class="content-card mt-8">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-6 text-center">Cardiac Drift Calculator</h2>
+            <div class="space-y-5">
+                <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 mb-2 items-center">
+                    <div class="font-semibold text-gray-700 text-sm sm:text-base">Time Point</div>
+                    <div class="font-semibold text-gray-700 text-center text-sm sm:text-base">Pace (min/km)</div>
+                    <div class="font-semibold text-gray-700 text-center text-sm sm:text-base">HR (bpm)</div>
+                </div>
+                <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 items-center">
+                    <div class="time-point-label text-sm sm:text-base">Start</div>
+                    <input type="text" id="cardiacDriftStartPace" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 4:30">
+                    <input type="number" id="cardiacDriftStartHr" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 150">
+                </div>
+                <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 items-center">
+                    <div class="time-point-label text-sm sm:text-base">Half</div>
+                    <input type="text" id="cardiacDriftHalfPace" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 4:35">
+                    <input type="number" id="cardiacDriftHalfHr" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 155">
+                </div>
+                <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 items-center">
+                    <div class="time-point-label text-sm sm:text-base">End</div>
+                    <input type="text" id="cardiacDriftEndPace" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 4:45">
+                    <input type="number" id="cardiacDriftEndHr" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 160">
+                </div>
+                <button id="cardiacDriftCalculateButton" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-4 rounded-md shadow-md hover:shadow-lg transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 text-base sm:text-lg">
+                    Calculate Drift
+                </button>
+            </div>
+            <div id="cardiacDriftResultArea" class="mt-6 p-4 rounded-md min-h-[50px] text-center font-medium text-base sm:text-lg result-default">
+                Enter data and click calculate.
+            </div>
+            <div id="cardiacDriftAiSection" class="mt-4 text-center hidden">
+                <button id="cardiacDriftAiInsightsButton" class="ai-button text-white font-semibold py-2 px-4 rounded-md shadow-sm hover:shadow-md transition duration-150 ease-in-out text-sm sm:text-base">
+                    Get AI Insights
+                </button>
+                <div id="cardiacDriftAiLoadingIndicator" class="loader hidden mt-3"></div>
+                <div id="cardiacDriftAiResponseArea" class="mt-3 p-4 rounded-md min-h-[60px] text-left text-sm sm:text-base whitespace-pre-wrap"></div>
+            </div>
+        </div>
+    `;
     appContent.appendChild(paceUtilsSection);
     document.getElementById('lt2speed').addEventListener('keypress', (event) => { if (event.key === 'Enter') { event.preventDefault(); calculatePacesFromUtil(); }});
+    
+    setupCardiacDriftCalculatorListeners();
 }
 
 function parsePaceToSeconds(paceString) { 
@@ -857,6 +924,129 @@ function calculatePacesFromUtil() {
     repeatsContentDiv.appendChild(repeatsTable);
     repeatsContentDiv.insertAdjacentHTML('beforeend', '<p class="text-xs text-stone-500 mt-2">Estimates. Adjust reps/recovery.</p>');
 }
+
+
+function convertPaceToKmhCD(paceStr) {
+    if (!paceStr || typeof paceStr !== 'string') return null;
+    const parts = paceStr.split(':');
+    if (parts.length !== 2) return null;
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    if (isNaN(minutes) || isNaN(seconds) || seconds < 0 || seconds >= 60 || minutes < 0) return null;
+    const totalMinutes = minutes + seconds / 60;
+    if (totalMinutes === 0) return null;
+    return 60 / totalMinutes;
+}
+
+function calculateCardiacDriftSimplifiedCD(paceStart_kmh, hrStart_bpm, paceEnd_kmh, hrEnd_bpm) {
+    if (hrStart_bpm <= 0 || hrEnd_bpm <= 0) return "Error: Heart rate values must be positive.";
+    if (paceStart_kmh === null || paceEnd_kmh === null) return "Error: Invalid pace format.";
+    if (paceStart_kmh < 0 || paceEnd_kmh < 0) return "Error: Pace values cannot be negative.";
+
+    const paHr_Start = paceStart_kmh / hrStart_bpm;
+    const paHr_End = paceEnd_kmh / hrEnd_bpm;
+
+    if (paHr_Start === 0) {
+        return paHr_End === 0 ? 0 : "Error: Pa:Hr at start is zero. Cannot calculate drift if end Pa:Hr is different.";
+    }
+    const driftPercentage = ((paHr_Start - paHr_End) / paHr_Start) * 100;
+    return parseFloat(driftPercentage.toFixed(2));
+}
+
+function setupCardiacDriftCalculatorListeners() {
+    const calculateButton = document.getElementById('cardiacDriftCalculateButton');
+    const aiInsightsButton = document.getElementById('cardiacDriftAiInsightsButton');
+
+    if (calculateButton) {
+        calculateButton.addEventListener('click', handleCardiacDriftCalculation);
+    }
+    if (aiInsightsButton) {
+        aiInsightsButton.addEventListener('click', fetchCardiacDriftAiInsights);
+    }
+}
+
+function handleCardiacDriftCalculation() {
+    const startPaceInput = document.getElementById('cardiacDriftStartPace');
+    const startHrInput = document.getElementById('cardiacDriftStartHr');
+    const endPaceInput = document.getElementById('cardiacDriftEndPace');
+    const endHrInput = document.getElementById('cardiacDriftEndHr');
+    const resultArea = document.getElementById('cardiacDriftResultArea');
+    const aiSection = document.getElementById('cardiacDriftAiSection');
+    const aiResponseArea = document.getElementById('cardiacDriftAiResponseArea');
+
+    resultArea.className = 'mt-6 p-4 rounded-md min-h-[50px] text-center font-medium text-base sm:text-lg result-default';
+    resultArea.textContent = 'Calculating...';
+    if(aiSection) aiSection.classList.add('hidden');
+    if(aiResponseArea) aiResponseArea.textContent = '';
+    currentCardiacDriftAiPrompt = "";
+
+    const paceStartStr = startPaceInput.value;
+    const hrStart = parseFloat(startHrInput.value);
+    const paceEndStr = endPaceInput.value;
+    const hrEnd = parseFloat(endHrInput.value);
+
+    if (isNaN(hrStart) || isNaN(hrEnd)) {
+        displayCardiacDriftError('Error: Please enter valid numbers for Heart Rate.');
+        return;
+    }
+
+    const paceStart_kmh = convertPaceToKmhCD(paceStartStr);
+    const paceEnd_kmh = convertPaceToKmhCD(paceEndStr);
+
+    if (paceStart_kmh === null || paceEnd_kmh === null) {
+        displayCardiacDriftError('Error: Invalid pace format. Please use mm:ss (e.g., 4:30).');
+        return;
+    }
+
+    const result = calculateCardiacDriftSimplifiedCD(paceStart_kmh, hrStart, paceEnd_kmh, hrEnd);
+
+    if (typeof result === 'number') {
+        displayCardiacDriftResult(result);
+        if(aiSection) aiSection.classList.remove('hidden');
+    } else {
+        displayCardiacDriftError(result); 
+    }
+}
+
+function displayCardiacDriftError(message) {
+    const resultArea = document.getElementById('cardiacDriftResultArea');
+    const aiSection = document.getElementById('cardiacDriftAiSection');
+    if (!resultArea) return;
+    resultArea.textContent = message;
+    resultArea.classList.remove('result-blue', 'result-yellow', 'result-red', 'result-default');
+    resultArea.classList.add('error-display');
+    if(aiSection) aiSection.classList.add('hidden');
+}
+
+function displayCardiacDriftResult(driftValue) {
+    const resultArea = document.getElementById('cardiacDriftResultArea');
+    if (!resultArea) return;
+    resultArea.textContent = `Cardiac Drift: ${driftValue}%`;
+    resultArea.classList.remove('error-display', 'result-default');
+
+    if (driftValue <= 5.10) {
+        resultArea.classList.add('result-blue');
+        currentCardiacDriftAiPrompt = "Explain what a good cardiac drift (around or below 5%) means for an endurance athlete during a steady-state effort. Keep it concise and encouraging. Respond ONLY in Greek.";
+    } else if (driftValue <= 7.00) {
+        resultArea.classList.add('result-yellow');
+        currentCardiacDriftAiPrompt = "Explain the importance of monitoring cardiac drift for an endurance athlete when it's in a moderate range (e.g., 5-7%). What might this indicate and what should they consider? Keep it informative. Respond ONLY in Greek.";
+    } else {
+        resultArea.classList.add('result-red');
+        currentCardiacDriftAiPrompt = "Explain what a high cardiac drift (e.g., above 7%) typically signifies for an endurance athlete. What are common causes and potential areas for improvement? Keep it constructive. Respond ONLY in Greek.";
+    }
+}
+
+async function fetchCardiacDriftAiInsights() {
+    if (!currentCardiacDriftAiPrompt) return;
+    const aiInsightsButton = document.getElementById('cardiacDriftAiInsightsButton');
+    if(aiInsightsButton) aiInsightsButton.disabled = true;
+    
+    callGeminiApi(currentCardiacDriftAiPrompt, 'cardiacDriftAiResponseArea', 'cardiacDriftAiLoadingIndicator')
+      .finally(() => {
+          if(aiInsightsButton) aiInsightsButton.disabled = false;
+      });
+}
+
 
 // --- Initial Load ---
 fetchMarathonPlan();
