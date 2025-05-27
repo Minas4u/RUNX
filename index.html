@@ -343,7 +343,7 @@
                      onerror="this.parentElement.innerHTML='<h1 class=\'text-2xl sm:text-3xl font-bold text-white\'>Helios Running</h1>'">
             </div>
             <h1 class="text-3xl sm:text-4xl main-title text-stone-800 mt-2"> 
-                <span class="title-project">project:</span> <span class="title-marathon">Marathon</span>
+                <span class="title-project" id="mainTitleProject">project:</span> <span class="title-marathon" id="mainTitleMarathon">Marathon</span>
             </h1>
         </header>
         <div class="space-y-4">
@@ -352,7 +352,7 @@
                 <input type="text" id="userIdInput" name="userIdInput" class="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" placeholder="Enter your User ID">
             </div>
             <button id="loginButton" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
-                Load Plan
+                {LOGIN_BUTTON_TEXT}
             </button>
             <div id="login-loading-message" class="hidden text-center text-sky-600">
                 <svg class="animate-spin h-5 w-5 text-sky-600 mx-auto mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -374,19 +374,19 @@
                      onerror="this.parentElement.innerHTML='<h1 class=\'text-2xl sm:text-3xl font-bold text-white\'>Helios Running</h1>'">
             </div>
             <h1 class="text-3xl sm:text-4xl main-title text-stone-800 mt-2"> 
-                <span class="title-project">project:</span> <span class="title-marathon">Marathon</span>
+                <span class="title-project" id="appHeaderTitleProject">project:</span> <span class="title-marathon" id="appHeaderTitleMarathon">Marathon</span>
             </h1>
-            <p class="text-stone-600 mt-2 text-lg"> 
+            <p class="text-stone-600 mt-2 text-lg" id="appSubtitle"> 
                 Your interactive guide to marathon training.
             </p>
         </header>
 
         <nav class="mb-8 flex flex-wrap justify-center gap-2 sm:gap-4 border-b border-stone-300 pb-4">
-            <button id="nav-overview" class="nav-button active-overview">Plan Overview</button>
-            <button id="nav-news" class="nav-button">News</button>
-            <button id="nav-plan" class="nav-button">Training Plan</button>
-            <button id="nav-calendar" class="nav-button">Calendar</button>
-            <button id="nav-pacer" class="nav-button">Pacer</button>
+            <button id="nav-overview" class="nav-button active-overview">{NAV_OVERVIEW_TEXT}</button>
+            <button id="nav-news" class="nav-button">{NAV_NEWS_TEXT}</button>
+            <button id="nav-plan" class="nav-button">{NAV_PLAN_TEXT}</button>
+            <button id="nav-calendar" class="nav-button">{NAV_CALENDAR_TEXT}</button>
+            <button id="nav-pacer" class="nav-button">{NAV_PACER_TEXT}</button>
         </nav>
 
         <main id="app-content">
@@ -403,12 +403,12 @@
 
 <script>
 // Default race date if none is stored or selected
-const DEFAULT_RACE_DATE_STRING = '2025-11-09'; // Example: New York City Marathon 2025 (First Sunday of Nov)
-let currentWebAppUrl = ''; // To be set based on User ID
+const DEFAULT_RACE_DATE_STRING = '2025-11-09';
+let currentWebAppUrl = ''; 
 
 // --- User-Specific Data Sources ---
 const userSpecificDataSources = {
-    "USER_HELIOS": "https://script.google.com/macros/s/AKfycbyzFZqNx7Wa8NTAafcYjEOCKs8Fy1Dmz71Urds2P36qvyt9jTljOjIHZu0kflWBbT5B5g/exec", // <-- UPDATED URL
+    "USER_HELIOS": "https://script.google.com/macros/s/AKfycbzcYDTY0a7wDu5Eak2uZG4Gd6K0JUsMp62_glKFjbFDj3DAsCsRtfzPOt0Epdm6zgzqMg/exec", // <-- UPDATED URL
     "USER_APOLLO": "YOUR_APPS_SCRIPT_URL_FOR_APOLLO_SHEET_HERE",
 };
 
@@ -418,7 +418,6 @@ let marathonPlan = null;
 let datedTrainingPlan = []; 
 let currentRaceDate = null; 
 let calendarCurrentDisplayDate = new Date(); 
-// let currentTodaysActivityForAI = null; // Commented out as AI advice button is removed
 
 // --- DOM Element References ---
 const loginContainer = document.getElementById('login-container');
@@ -430,12 +429,9 @@ const loginErrorMessageDiv = document.getElementById('login-error-message');
 const loginLoadingMessageDiv = document.getElementById('login-loading-message');
 
 let mileageChartInstance = null; 
-// let currentCardiacDriftAiPrompt = ""; // Commented out as AI for cardiac drift is removed
-
 
 // --- Gemini API Call via Apps Script Proxy (Kept for potential future use) ---
 async function callGeminiApi(prompt, targetElementId, loadingElementId) {
-    // ... (Implementation remains, but calls to it are removed for now)
     const targetElement = document.getElementById(targetElementId);
     const loadingIndicator = document.getElementById(loadingElementId);
 
@@ -518,6 +514,48 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
     }
 }
 
+/**
+ * Updates static UI text elements based on marathonPlan.uiText
+ */
+function updateStaticUIText() {
+    if (!marathonPlan || !marathonPlan.uiText) {
+        console.warn("marathonPlan.uiText not available. Using default HTML text.");
+        // Replace placeholders in HTML with default values if uiText is not available
+        // This is a fallback, ideally uiText should always be populated
+        document.getElementById('loginButton').textContent = 'Load Plan';
+        document.getElementById('mainTitleProject').textContent = 'project:';
+        document.getElementById('mainTitleMarathon').textContent = 'Marathon';
+        document.getElementById('appHeaderTitleProject').textContent = 'project:';
+        document.getElementById('appHeaderTitleMarathon').textContent = 'Marathon';
+        document.getElementById('appSubtitle').textContent = 'Your interactive guide to marathon training.';
+        document.getElementById('nav-overview').textContent = 'Plan Overview';
+        document.getElementById('nav-news').textContent = 'News';
+        document.getElementById('nav-plan').textContent = 'Training Plan';
+        document.getElementById('nav-calendar').textContent = 'Calendar';
+        document.getElementById('nav-pacer').textContent = 'Pacer';
+        return;
+    }
+
+    const uiText = marathonPlan.uiText;
+
+    // Login Screen
+    document.getElementById('loginButton').textContent = uiText.loginButtonText || 'Load Plan';
+    document.getElementById('mainTitleProject').textContent = uiText.mainTitleProject || 'project:';
+    document.getElementById('mainTitleMarathon').textContent = uiText.mainTitleMarathon || 'Marathon';
+    
+    // Main App Header
+    document.getElementById('appHeaderTitleProject').textContent = uiText.mainTitleProject || 'project:';
+    document.getElementById('appHeaderTitleMarathon').textContent = uiText.mainTitleMarathon || 'Marathon';
+    document.getElementById('appSubtitle').textContent = uiText.appSubtitle || 'Your interactive guide to marathon training.';
+
+    // Navigation Buttons
+    document.getElementById('nav-overview').textContent = uiText.navButtonOverview || 'Plan Overview';
+    document.getElementById('nav-news').textContent = uiText.navButtonNews || 'News';
+    document.getElementById('nav-plan').textContent = uiText.navButtonPlan || 'Training Plan';
+    document.getElementById('nav-calendar').textContent = uiText.navButtonCalendar || 'Calendar';
+    document.getElementById('nav-pacer').textContent = uiText.navButtonPacer || 'Pacer';
+}
+
 
 // --- Data Fetching and Initialization ---
 async function fetchMarathonPlan(webAppUrlToUse) {
@@ -538,15 +576,18 @@ async function fetchMarathonPlan(webAppUrlToUse) {
         if (data.error) {
             throw new Error(`Error from Google Sheet App: ${data.error}`);
         }
-        if (!data.philosophy || !data.philosophy.title || !Array.isArray(data.philosophy.content) ||
+        // Enhanced validation to include uiText and settings
+        if (!data.uiText || typeof data.uiText !== 'object' ||
+            !data.settings || !data.settings.zones || !Array.isArray(data.settings.zones) ||
+            !data.philosophy || !data.philosophy.title || !Array.isArray(data.philosophy.content) ||
             !data.paceGuide || !data.paceGuide.title || !Array.isArray(data.paceGuide.paces) ||
             !data.generalNotes || !data.generalNotes.title || !Array.isArray(data.generalNotes.notes) ||
-            !Array.isArray(data.phases) ||
-            !data.settings || !data.settings.zones || !Array.isArray(data.settings.zones) // Added check for settings
+            !Array.isArray(data.phases)
             ) {
-            throw new Error("Fetched data incomplete. Check Apps Script doGet & Sheet structure, including Settings.");
+            throw new Error("Fetched data incomplete or malformed. Check Apps Script doGet & Sheet structure (including UIText, Settings, Plan Overview).");
         }
         marathonPlan = data;
+        updateStaticUIText(); // Update UI text elements after fetching data
 
         const storedRaceDate = localStorage.getItem('marathonRaceDate');
         if (storedRaceDate) {
@@ -554,7 +595,15 @@ async function fetchMarathonPlan(webAppUrlToUse) {
             if (isValidDate(parsedDate)) currentRaceDate = parsedDate;
         }
         if (!currentRaceDate) {
-            currentRaceDate = new Date(DEFAULT_RACE_DATE_STRING + 'T00:00:00');
+            // Use planStartDate from settings if available and valid, otherwise default
+            if (marathonPlan.settings && marathonPlan.settings.planStartDate) {
+                 const planDefaultDate = new Date(marathonPlan.settings.planStartDate + 'T00:00:00');
+                 // This logic assumes the planStartDate is the *start* of the plan,
+                 // and the DEFAULT_RACE_DATE_STRING is an example *race* date.
+                 // If planStartDate is meant to be the race date if no other is set, adjust accordingly.
+                 // For now, we'll still use DEFAULT_RACE_DATE_STRING for the *race* date if nothing else is set.
+            }
+            currentRaceDate = new Date(DEFAULT_RACE_DATE_STRING + 'T00:00:00'); // Fallback to default race date
             localStorage.setItem('marathonRaceDate', DEFAULT_RACE_DATE_STRING);
         }
         calculateAndStoreDatedTrainingPlan(currentRaceDate);
@@ -575,12 +624,12 @@ function initializeApp() {
     if(appContent) appContent.innerHTML = '';
 
     document.getElementById('nav-overview').addEventListener('click', renderOverview);
-    document.getElementById('nav-news').addEventListener('click', renderNewsTab); // Added News
+    document.getElementById('nav-news').addEventListener('click', renderNewsTab); 
     document.getElementById('nav-plan').addEventListener('click', renderTrainingPlan);
     document.getElementById('nav-calendar').addEventListener('click', renderCalendarTab);
     document.getElementById('nav-pacer').addEventListener('click', renderPaceUtilities);
     
-    renderOverview(); // Default tab
+    renderOverview(); 
     mainAppWrapper.classList.remove('hidden');
     loginContainer.classList.add('hidden');
 }
@@ -630,7 +679,13 @@ function setActiveNav(activeId) {
 
 function createHtmlList(items) {
     if (!items || !Array.isArray(items)) return '';
-    return `<ul class="list-disc list-inside space-y-1 text-stone-700">${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
+    // Ensure items are treated as plain text, not HTML, unless specifically intended
+    return `<ul class="list-disc list-inside space-y-1 text-stone-700">${items.map(item => {
+        // Basic sanitization if items might contain unwanted HTML from sheet
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = item; // Allow intended HTML like <strong>
+        return `<li>${tempDiv.innerHTML}</li>`;
+    }).join('')}</ul>`;
 }
 
 // --- Date Utility Functions ---
@@ -676,22 +731,14 @@ function calculateAndStoreDatedTrainingPlan(raceDateInput) {
     }
 }
 
-// --- AI Advice Function (Commented out as feature is removed) ---
-/*
-function getTodaysTrainingAdvice() {
-    // ... (Original implementation, now unused)
-}
-*/
 
 // --- Overview Tab Rendering ---
 function renderTodaysTraining() {
     const container = document.getElementById('todays-training-content');
-    if (!container) return;
-
-    // currentTodaysActivityForAI = null; // Reset as AI button is removed
+    if (!container || !marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.overview) return;
 
     if (!currentRaceDate) {
-        container.innerHTML = `<p class="text-sm text-sky-700">Set race date in <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">Calendar</button> for today's training. Default: ${DEFAULT_RACE_DATE_STRING}.</p>`;
+        container.innerHTML = `<p class="text-sm text-sky-700">Set race date in <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">${marathonPlan.uiText.navButtonCalendar || 'Calendar'}</button> for today's training. Default: ${DEFAULT_RACE_DATE_STRING}.</p>`;
         return;
     }
     if (datedTrainingPlan.length === 0 && currentRaceDate && marathonPlan) calculateAndStoreDatedTrainingPlan(currentRaceDate);
@@ -705,32 +752,31 @@ function renderTodaysTraining() {
         return isSameDay(itemDate, today);
     });
     
-    // currentTodaysActivityForAI = todaysActivity; // No longer needed for AI
-
     let activityHtml = '';
+    const todayTitle = marathonPlan.uiText.overview.todaysTrainingTitle || "Today's Training";
+
     if (todaysActivity) {
         const dayName = todaysActivity.date.toLocaleDateString(undefined, { weekday: 'long' });
         let activityText = todaysActivity.activity.replace(/^[^:]+:\s*/, '');
         
         activityHtml = `
-            <h3 class="text-lg font-semibold text-sky-700 mb-1">Today (${dayName}, ${formatDate(today)})</h3>
+            <h3 class="text-lg font-semibold text-sky-700 mb-1">${todayTitle} (${dayName}, ${formatDate(today)})</h3>
             <p class="text-stone-700">${activityText}</p>
             ${todaysActivity.notes ? `<p class="text-sm text-stone-600 italic mt-1"><strong>Weekly Notes:</strong> ${todaysActivity.notes}</p>` : ''}
             <p class="text-xs text-stone-500 mt-1">Phase: ${todaysActivity.phaseName} | Week: ${todaysActivity.weekNum}</p>
         `;
     } else {
-        activityHtml = `<h3 class="text-lg font-semibold text-sky-700 mb-1">Today (${formatDate(today)})</h3><p class="text-stone-700">No training scheduled for today based on race date (${formatDate(currentRaceDate)}), or outside plan duration.</p><p class="text-sm text-stone-600">This might be rest or before/after plan.</p>`;
+        activityHtml = `<h3 class="text-lg font-semibold text-sky-700 mb-1">${todayTitle} (${formatDate(today)})</h3><p class="text-stone-700">No training scheduled for today based on race date (${formatDate(currentRaceDate)}), or outside plan duration.</p><p class="text-sm text-stone-600">This might be rest or before/after plan.</p>`;
     }
 
-    // --- Today's Zones Table ---
-    let zonesTableHtml = '<div id="todays-zones-placeholder" class="mt-3 text-sm text-stone-500 italic">Training zones will be displayed here once configured in Settings.</div>';
-    if (marathonPlan && marathonPlan.settings && marathonPlan.settings.zones && marathonPlan.settings.zones.length > 0) {
-        const zoneColors = { // Consistent with Pacer tab idea
+    let zonesTableHtml = `<div id="todays-zones-placeholder" class="mt-3 text-sm text-stone-500 italic">${(marathonPlan.uiText.overview && marathonPlan.uiText.overview.zonesNotConfigured) || 'Training zones will be displayed here once configured in Settings.'}</div>`;
+    if (marathonPlan.settings && marathonPlan.settings.zones && marathonPlan.settings.zones.length > 0) {
+        const zoneColors = { 
             "Z1": "text-green-600", "Z2": "text-sky-600", "Z3": "text-lime-600", 
             "Z4": "text-amber-500", "Z5": "text-red-600"
         };
         zonesTableHtml = `
-            <h4 class="text-md font-semibold text-sky-700 mt-4 mb-1">Today's Training Zones:</h4>
+            <h4 class="text-md font-semibold text-sky-700 mt-4 mb-1">${(marathonPlan.uiText.overview && marathonPlan.uiText.overview.todayZonesTitle) || "Today's Training Zones:"}</h4>
             <table class="todays-zones-table">
                 <thead><tr><th>Zone</th><th>Pace Range (min/km)</th></tr></thead>
                 <tbody>
@@ -751,10 +797,12 @@ function renderTodaysTraining() {
 
 function renderThisWeeksPlan() {
     const container = document.getElementById('this-weeks-plan-content');
-    if (!container) return;
+    if (!container || !marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.overview) return;
+
+    const thisWeeksPlanTitle = marathonPlan.uiText.overview.thisWeeksPlanTitle || "This Week's Plan";
 
     if (!currentRaceDate) {
-        container.innerHTML = `<p class="text-sm text-sky-700">Set race date in <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">Calendar</button> for this week's plan.</p>`;
+        container.innerHTML = `<p class="text-sm text-sky-700">Set race date in <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">${marathonPlan.uiText.navButtonCalendar || 'Calendar'}</button> for this week's plan.</p>`;
         return;
     }
     if (datedTrainingPlan.length === 0 && currentRaceDate && marathonPlan) calculateAndStoreDatedTrainingPlan(currentRaceDate);
@@ -766,7 +814,7 @@ function renderThisWeeksPlan() {
     monday.setHours(0, 0, 0, 0);
     
     const currentWeekActivities = [];
-    let weekNotes = ""; // Store notes for the current week
+    let weekNotes = ""; 
     let weekInfoFound = false;
 
     for (let i = 0; i < 7; i++) {
@@ -779,7 +827,7 @@ function renderThisWeeksPlan() {
         });
 
         if (activityForDay) {
-            if (!weekInfoFound) { // Capture notes from the first activity of the week
+            if (!weekInfoFound) { 
                 weekNotes = activityForDay.notes || "";
                 weekInfoFound = true;
             }
@@ -807,7 +855,7 @@ function renderThisWeeksPlan() {
 
         container.innerHTML = `
             <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-green-700">This Week's Plan</h3>
+                <h3 class="text-lg font-semibold text-green-700">${thisWeeksPlanTitle}</h3>
                 <button id="printWeekPdfBtn" class="pdf-button">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M5 2.5A2.5 2.5 0 0 1 7.5 0h5A2.5 2.5 0 0 1 15 2.5V5h-2.55a3 3 0 0 0-4.9 0H5V2.5zM10 6a2 2 0 0 0-1.936 1.5H5V15a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7.5h-3.064A2 2 0 0 0 10 6zm0 2a.75.75 0 0 1 .75.75v.032l1.533.306a.75.75 0 0 1-.293 1.455l-1.68-.335a.75.75 0 0 1-.59-.518L9.25 8.75A.75.75 0 0 1 10 8z" clip-rule="evenodd" /></svg>
                     PDF
@@ -833,7 +881,7 @@ function renderThisWeeksPlan() {
         const pdfBtn = document.getElementById('printWeekPdfBtn');
         if (pdfBtn) pdfBtn.addEventListener('click', printWeekToPdf);
     } else {
-        container.innerHTML = `<h3 class="text-lg font-semibold text-green-700 mb-1">This Week's Plan</h3><p class="text-stone-600">No training scheduled for this week or plan not loaded.</p>`;
+        container.innerHTML = `<h3 class="text-lg font-semibold text-green-700 mb-1">${thisWeeksPlanTitle}</h3><p class="text-stone-600">No training scheduled for this week or plan not loaded.</p>`;
     }
 }
 
@@ -843,12 +891,14 @@ function printWeekToPdf() {
 }
 
 function renderOverview() {
-    if (!marathonPlan) return;
+    if (!marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.overview) return;
     setActiveNav('nav-overview');
     appContent.innerHTML = ''; 
     const overviewSection = document.createElement('section');
     overviewSection.id = "overview-content";
     overviewSection.className = "space-y-6";
+
+    const uiText = marathonPlan.uiText.overview;
 
     overviewSection.innerHTML = `
         <div class="md:flex md:space-x-6 space-y-6 md:space-y-0 mb-6">
@@ -860,15 +910,15 @@ function renderOverview() {
             </div>
         </div>
         <div class="content-card overview-section-card">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.paceGuide.title || 'Pace Guide'}</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.paceGuide.title || uiText.paceGuideTitle || 'Pace Guide'}</h2>
             ${createHtmlList(marathonPlan.paceGuide.paces)}
         </div>
         <div class="content-card overview-section-card">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.generalNotes.title || 'Important Notes'}</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.generalNotes.title || uiText.generalNotesTitle || 'Important Notes'}</h2>
             ${createHtmlList(marathonPlan.generalNotes.notes)}
         </div>
         <div class="content-card overview-section-card">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">Overall Mileage Progression</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${uiText.mileageProgressionTitle || 'Overall Mileage Progression'}</h2>
             <div class="chart-container bg-white p-2 rounded-md shadow">
                 <canvas id="mileageChart"></canvas>
             </div>
@@ -918,19 +968,20 @@ function renderMileageChart() {
 
 // --- News Tab Rendering ---
 function renderNewsTab() {
-    if (!marathonPlan) return;
+    if (!marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.news) return;
     setActiveNav('nav-news');
     appContent.innerHTML = '';
     const newsSection = document.createElement('section');
     newsSection.id = "news-content";
     newsSection.className = "space-y-6";
+    const philosophyTitle = marathonPlan.philosophy.title || marathonPlan.uiText.news.philosophyTitle || "Training Philosophy";
 
     newsSection.innerHTML = `
         <div class="content-card news-section-card">
-             <h2 class="text-xl sm:text-2xl font-semibold text-indigo-700 mb-3">${marathonPlan.philosophy.title || 'Training Philosophy'}</h2>
+             <h2 class="text-xl sm:text-2xl font-semibold text-indigo-700 mb-3">${philosophyTitle}</h2>
             ${createHtmlList(marathonPlan.philosophy.content)}
         </div>
-        `;
+    `;
     appContent.appendChild(newsSection);
 }
 
@@ -946,7 +997,7 @@ function getPhaseButtonClass(phaseName) {
 }
 
 function renderTrainingPlan() {
-    if (!marathonPlan) return;
+    if (!marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.plan) return;
     setActiveNav('nav-plan');
     appContent.innerHTML = '';
     const trainingPlanSection = document.createElement('section');
@@ -955,9 +1006,12 @@ function renderTrainingPlan() {
     const phaseButtonsHtml = marathonPlan.phases.map((phase, index) => 
         `<button class="phase-button ${getPhaseButtonClass(phase.name)}" data-phase-index="${index}">${phase.name}</button>`
     ).join('');
+    
+    const selectPhaseTitle = marathonPlan.uiText.plan.selectPhaseTitle || "Select Training Phase:";
+
     trainingPlanSection.innerHTML = `
         <div>
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Select Training Phase:</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">${selectPhaseTitle}</h2>
             <div id="phase-navigation" class="flex flex-wrap gap-2 mb-6">${phaseButtonsHtml}</div>
             <div id="phase-details" class="space-y-4"><p class="text-stone-600 italic">Select a phase to see its details.</p></div>
         </div>
@@ -999,7 +1053,7 @@ function getPhaseTitleTextColorClass(phaseName) {
 }
 
 function renderPhaseDetails(phaseIndex) {
-    if (!marathonPlan) return;
+    if (!marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.plan) return;
     const phase = marathonPlan.phases[phaseIndex];
     if (!phase) {
         const div = document.getElementById('phase-details'); if(div) div.innerHTML = '<p class="text-red-500">Error: Could not load phase details.</p>'; return;
@@ -1010,6 +1064,7 @@ function renderPhaseDetails(phaseIndex) {
     
     const phaseTitleColorClass = getPhaseTitleTextColorClass(phase.name);
     const formattedDuration = formatPhaseDuration(phase.duration);
+    const selectWeekTitle = marathonPlan.uiText.plan.selectWeekTitle || "Select a Week:";
 
     const weekButtonsHtml = (phase.weeks && Array.isArray(phase.weeks)) ? phase.weeks.map((week, index) => {
         const weekDateRange = getWeekDateRangeString(week, phase.name);
@@ -1022,7 +1077,7 @@ function renderPhaseDetails(phaseIndex) {
             <h3 class="text-lg sm:text-xl font-semibold mb-2 phase-title-style ${phaseTitleColorClass}">${phase.name} ${formattedDuration}</h3>
             <p class="text-sm text-stone-600 mb-1"><strong>Goal:</strong> ${phase.goal || 'N/A'}</p>
             <p class="text-sm text-stone-600 mb-3"><strong>Mileage Range:</strong> ${phase.mileageRange || 'N/A'}</p>
-            <h4 class="text-md font-medium text-stone-700 mb-2">Select a Week:</h4>
+            <h4 class="text-md font-medium text-stone-700 mb-2">${selectWeekTitle}</h4>
             <div id="week-navigation-${phaseIndex}" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 gap-2">${weekButtonsHtml}</div>
         </div>`;
     document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(button => {
@@ -1123,24 +1178,29 @@ function getActivityThumbnailClass(activityText) {
 }
 
 function renderCalendarTab() {
+    if (!marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.calendar) return;
     setActiveNav('nav-calendar');
     appContent.innerHTML = '';
     const calendarSection = document.createElement('section');
     calendarSection.id = "calendar-content"; calendarSection.className = "space-y-6";
     const raceDateValue = currentRaceDate ? currentRaceDate.toISOString().split('T')[0] : DEFAULT_RACE_DATE_STRING;
+    const uiText = marathonPlan.uiText.calendar;
+
     calendarSection.innerHTML = `
         <div class="content-card overview-section-card">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-2">Training Calendar</h2>
-            <div id="calendar-selected-day-header" class="mb-4 text-lg font-medium text-sky-700"></div> <div id="calendar-controls" class="flex justify-between items-center mb-4">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-2">${uiText.mainTitle || 'Training Calendar'}</h2>
+            <div id="calendar-selected-day-header" class="mb-4 text-lg font-medium text-sky-700"></div>
+            <div id="calendar-controls" class="flex justify-between items-center mb-4">
                 <button id="prevMonthBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm">&lt; Prev</button>
                 <h3 id="currentMonthYear" class="text-lg font-semibold text-stone-700"></h3>
                 <button id="nextMonthBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm">Next &gt;</button>
             </div>
             <div id="calendar-grid-container" class="calendar-grid"></div>
             <div id="calendar-day-details-content" class="mt-4"></div>
-            <div id="raceDateInputContainer" class="mt-6 pt-4 border-t border-stone-200"> <label for="raceDateInput" class="block text-sm font-medium text-stone-700 mb-1">Select Your Race Date:</label>
+            <div id="raceDateInputContainer" class="mt-6 pt-4 border-t border-stone-200">
+                <label for="raceDateInput" class="block text-sm font-medium text-stone-700 mb-1">${uiText.raceDateLabel || 'Select Your Race Date:'}</label>
                 <input type="date" id="raceDateInput" name="raceDateInput" value="${raceDateValue}" class="mt-1 block w-full md:w-1/2 px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
-                <p class="text-xs text-stone-500 mt-1">Plan ends on this date.</p>
+                <p class="text-xs text-stone-500 mt-1">${uiText.raceDateHelpText || 'Plan ends on this date.'}</p>
             </div>
         </div>`;
     appContent.appendChild(calendarSection);
@@ -1152,7 +1212,7 @@ function renderCalendarTab() {
             calendarCurrentDisplayDate = new Date(newRaceDate.getFullYear(), newRaceDate.getMonth(), 1);
             renderCalendarGrid();
             document.getElementById('calendar-day-details-content').innerHTML = ''; 
-            document.getElementById('calendar-selected-day-header').innerHTML = ''; // Clear selected day header
+            document.getElementById('calendar-selected-day-header').innerHTML = ''; 
             if (document.getElementById('nav-overview').classList.contains('active-overview')) {
                  renderOverview(); 
             }
@@ -1214,7 +1274,8 @@ function renderSelectedCalendarDayDetails(date) {
         let activityText = activityDetails.activity.replace(/^[^:]+:\s*/, '');
         headerContainer.innerHTML = `<h4 class="text-lg font-semibold text-sky-700">Training for ${dayName}, ${formatDate(activityDetails.date)}</h4>`;
         detailsContainer.innerHTML = `
-            <div class="content-card mt-0" id="calendar-day-details-printable-area"> <p class="text-stone-700 mb-1"><strong>Activity:</strong> ${activityText}</p>
+            <div class="content-card mt-0" id="calendar-day-details-printable-area"> 
+                <p class="text-stone-700 mb-1"><strong>Activity:</strong> ${activityText}</p>
                 <p class="text-xs text-stone-500 mb-1">Phase: ${activityDetails.phaseName} | Week: ${activityDetails.weekNum}</p>
                 ${activityDetails.notes ? `<p class="text-sm text-stone-600 italic mt-1"><strong>Weekly Notes:</strong> ${activityDetails.notes}</p>` : ''}
             </div>`;
@@ -1229,58 +1290,60 @@ function renderSelectedCalendarDayDetails(date) {
 
 // --- Pace Utilities Tab Rendering ---
 function renderPaceUtilities() {
+    if (!marathonPlan || !marathonPlan.uiText || !marathonPlan.uiText.pacer) return;
     setActiveNav('nav-pacer');
     appContent.innerHTML = '';
     const paceUtilsSection = document.createElement('section');
     paceUtilsSection.id = "pace-utils-content";
     paceUtilsSection.className = "space-y-6";
+    const uiText = marathonPlan.uiText.pacer;
 
     paceUtilsSection.innerHTML = `
         <div class="content-card">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Training Zone & Repeats Pace Calculator</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">${uiText.zoneRepeatsCalculatorTitle || 'Zone & Repeats Calculator'}</h2>
             <div class="mb-6">
-                <label for="lt2speed" class="block text-sm font-medium text-stone-700 mb-1">Enter LT2 Speed (pace per km):</label>
+                <label for="lt2speed" class="block text-sm font-medium text-stone-700 mb-1">${uiText.lt2SpeedLabel || 'Enter LT2 Speed (pace per km):'}</label>
                 <input type="text" id="lt2speed" name="lt2speed" placeholder="e.g., 4:30" class="mt-1 block w-full px-4 py-3 border border-stone-300 rounded-lg shadow-sm sm:text-sm transition duration-150 ease-in-out">
                 <div id="error-message-calc" class="text-red-500 text-sm mt-2 h-5"></div>
             </div>
-            <button onclick="calculatePacesFromUtil()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 transition duration-150 ease-in-out transform hover:scale-105">Calculate Zones & Repeats Paces</button>
+            <button onclick="calculatePacesFromUtil()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 transition duration-150 ease-in-out transform hover:scale-105">${uiText.calculateZonesButton || 'Calculate Paces'}</button>
             <div class="mt-8 md:flex md:space-x-6">
-                <div id="zones-section-util" class="flex-1"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Training Zones:</h3><div id="zones-content-util"><p class="text-stone-500 italic text-sm">Enter LT2 speed and click calculate.</p></div></div>
-                <div id="repeats-section-util" class="flex-1 mt-8 md:mt-0"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">Repeats Paces:</h3><div id="repeats-content-util"><p class="text-stone-500 italic text-sm">Calculated based on LT2 speed.</p></div></div>
+                <div id="zones-section-util" class="flex-1"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">${uiText.trainingZonesHeader || 'Training Zones:'}</h3><div id="zones-content-util"><p class="text-stone-500 italic text-sm">Enter LT2 speed and click calculate.</p></div></div>
+                <div id="repeats-section-util" class="flex-1 mt-8 md:mt-0"><h3 class="text-lg font-semibold text-stone-700 mb-2 border-b border-stone-300 pb-2">${uiText.repeatsPacesHeader || 'Repeats Paces:'}</h3><div id="repeats-content-util"><p class="text-stone-500 italic text-sm">Calculated based on LT2 speed.</p></div></div>
             </div>
         </div>
 
         <div class="content-card mt-8">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-6 text-center">Cardiac Drift Calculator</h2>
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-6 text-center">${uiText.cardiacDriftCalculatorTitle || 'Cardiac Drift Calculator'}</h2>
             <div class="space-y-5">
                 <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 mb-2 items-center">
-                    <div class="font-semibold text-gray-700 text-sm sm:text-base">Time Point</div>
-                    <div class="font-semibold text-gray-700 text-center text-sm sm:text-base">Pace (min/km)</div>
-                    <div class="font-semibold text-gray-700 text-center text-sm sm:text-base">HR (bpm)</div>
+                    <div class="font-semibold text-gray-700 text-sm sm:text-base">${uiText.timePointHeader || 'Time Point'}</div>
+                    <div class="font-semibold text-gray-700 text-center text-sm sm:text-base">${uiText.paceHeader || 'Pace (min/km)'}</div>
+                    <div class="font-semibold text-gray-700 text-center text-sm sm:text-base">${uiText.hrHeader || 'HR (bpm)'}</div>
                 </div>
                 <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 items-center">
-                    <div class="time-point-label text-sm sm:text-base">Start</div>
+                    <div class="time-point-label text-sm sm:text-base">${uiText.driftStartLabel || 'Start'}</div>
                     <input type="text" id="cardiacDriftStartPace" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 4:30">
                     <input type="number" id="cardiacDriftStartHr" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 150">
                 </div>
                 <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 items-center">
-                    <div class="time-point-label text-sm sm:text-base">Half</div>
+                    <div class="time-point-label text-sm sm:text-base">${uiText.driftHalfLabel || 'Half'}</div>
                     <input type="text" id="cardiacDriftHalfPace" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 4:35">
                     <input type="number" id="cardiacDriftHalfHr" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 155">
                 </div>
                 <div class="grid grid-cols-3 gap-x-3 sm:gap-x-4 items-center">
-                    <div class="time-point-label text-sm sm:text-base">End</div>
+                    <div class="time-point-label text-sm sm:text-base">${uiText.driftEndLabel || 'End'}</div>
                     <input type="text" id="cardiacDriftEndPace" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 4:45">
                     <input type="number" id="cardiacDriftEndHr" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500 text-center text-sm sm:text-base" placeholder="e.g., 160">
                 </div>
                 <button id="cardiacDriftCalculateButton" class="w-full bg-sky-500 hover:bg-sky-600 text-white font-semibold py-3 px-4 rounded-md shadow-md hover:shadow-lg transition duration-150 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50 text-base sm:text-lg">
-                    Calculate Drift
+                    ${uiText.calculateDriftButton || 'Calculate Drift'}
                 </button>
             </div>
             <div id="cardiacDriftResultArea" class="mt-6 p-4 rounded-md min-h-[50px] text-center font-medium text-base sm:text-lg result-default">
-                Enter data and click calculate.
+                ${uiText.driftResultDefault || 'Enter data and click calculate.'}
             </div>
-            </div>
+        </div>
     `;
     appContent.appendChild(paceUtilsSection);
     document.getElementById('lt2speed').addEventListener('keypress', (event) => { if (event.key === 'Enter') { event.preventDefault(); calculatePacesFromUtil(); }});
@@ -1385,11 +1448,9 @@ function handleCardiacDriftCalculation() {
     const endPaceInput = document.getElementById('cardiacDriftEndPace');
     const endHrInput = document.getElementById('cardiacDriftEndHr');
     const resultArea = document.getElementById('cardiacDriftResultArea');
-    // const aiResponseArea = document.getElementById('cardiacDriftAiResponseArea'); // AI response area removed
 
     resultArea.className = 'mt-6 p-4 rounded-md min-h-[50px] text-center font-medium text-base sm:text-lg result-default';
     resultArea.textContent = 'Calculating...';
-    // if(aiResponseArea) aiResponseArea.classList.add('hidden'); // AI response area removed
 
     const paceStartStr = startPaceInput.value; const hrStart = parseFloat(startHrInput.value);
     const paceEndStr = endPaceInput.value; const hrEnd = parseFloat(endHrInput.value);
@@ -1399,18 +1460,16 @@ function handleCardiacDriftCalculation() {
     if (paceStart_kmh === null || paceEnd_kmh === null) { displayCardiacDriftError('Error: Invalid pace format (mm:ss).'); return; }
 
     const result = calculateCardiacDriftSimplifiedCD(paceStart_kmh, hrStart, paceEnd_kmh, hrEnd);
-    if (typeof result === 'number') displayCardiacDriftResult(result); // AI call removed from here
+    if (typeof result === 'number') displayCardiacDriftResult(result);
     else displayCardiacDriftError(result);
 }
 
 function displayCardiacDriftError(message) {
     const resultArea = document.getElementById('cardiacDriftResultArea');
-    // const aiResponseArea = document.getElementById('cardiacDriftAiResponseArea'); // AI response area removed
     if (!resultArea) return;
     resultArea.textContent = message;
     resultArea.classList.remove('result-blue', 'result-yellow', 'result-red', 'result-default');
     resultArea.classList.add('error-display');
-    // if(aiResponseArea) aiResponseArea.classList.add('hidden'); // AI response area removed
 }
 
 function displayCardiacDriftResult(driftValue) {
@@ -1421,11 +1480,25 @@ function displayCardiacDriftResult(driftValue) {
     if (driftValue <= 5.10) resultArea.classList.add('result-blue');
     else if (driftValue <= 7.00) resultArea.classList.add('result-yellow');
     else resultArea.classList.add('result-red');
-    // AI prompt setting removed
 }
 
 // --- DOMContentLoaded Event Listener ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Initial placeholder text for elements that will be updated by updateStaticUIText
+    // This ensures something is visible before data loads, or if uiText fails.
+    document.getElementById('loginButton').textContent = 'Load Plan';
+    document.getElementById('mainTitleProject').textContent = 'project:';
+    document.getElementById('mainTitleMarathon').textContent = 'Marathon';
+    document.getElementById('appHeaderTitleProject').textContent = 'project:';
+    document.getElementById('appHeaderTitleMarathon').textContent = 'Marathon';
+    document.getElementById('appSubtitle').textContent = 'Your interactive guide to marathon training.';
+    document.getElementById('nav-overview').textContent = 'Plan Overview';
+    document.getElementById('nav-news').textContent = 'News';
+    document.getElementById('nav-plan').textContent = 'Training Plan';
+    document.getElementById('nav-calendar').textContent = 'Calendar';
+    document.getElementById('nav-pacer').textContent = 'Pacer';
+
+
     const loginButton = document.getElementById('loginButton');
     if(loginButton) loginButton.addEventListener('click', handleLogin);
     const userIdInput = document.getElementById('userIdInput');
