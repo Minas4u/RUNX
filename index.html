@@ -6,32 +6,51 @@
     <title>project: Marathon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f5f4; 
-            color: #292524; 
+            font-family: 'Ubuntu', sans-serif;
+            background-color: #f0f4f8; 
+            color: #1e293b; 
         }
         .main-container {
             background-color: #ffffff; 
             border-radius: 0.75rem; 
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+            width: 100%;
+            max-width: 64rem; 
+            padding: 1.5rem; 
+        }
+        @media (min-width: 640px) { 
+            .main-container {
+                padding: 2rem; 
+            }
         }
         .nav-button {
-            padding: 0.5rem 1rem;
+            padding: 0.6rem 1.1rem; 
             border-radius: 0.375rem; 
-            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-            font-weight: 500;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            font-weight: 600; 
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
-        .nav-button.active {
-            background-color: #0284c7; 
-            color: white;
+        .nav-button:hover:not(.active-overview):not(.active-plan):not(.active-calendar):not(.active-pacer) { 
+            background-color: #f3f4f6; 
+            color: #1f2937; 
         }
-        .nav-button:not(.active):hover {
-            background-color: #e0f2fe; 
-            color: #0369a1; 
-        }
+
+        .nav-button.active-overview { background-color: #0284c7; color: white; } 
+        .nav-button.active-overview:hover { background-color: #0369a1; } 
+
+        .nav-button.active-plan { background-color: #f59e0b; color: white; } 
+        .nav-button.active-plan:hover { background-color: #d97706; } 
+        
+        .nav-button.active-calendar { background-color: #059669; color: white; } 
+        .nav-button.active-calendar:hover { background-color: #047857; } 
+
+        .nav-button.active-pacer { background-color: #e11d48; color: white; } 
+        .nav-button.active-pacer:hover { background-color: #be123c; } 
+
+
         .phase-button {
             padding: 0.5rem 1rem;
             border-radius: 0.375rem; 
@@ -42,27 +61,55 @@
         .phase-button-preseason { border-color: #d1d5db; color: #4b5563; }
         .phase-button-preseason:hover:not(.active) { background-color: #f3f4f6; }
         .phase-button-preseason.active { background-color: #6b7280; color: white; border-color: #6b7280; }
+        
         .phase-button-base { border-color: #0ea5e9; color: #0369a1; }
         .phase-button-base:hover:not(.active) { background-color: #e0f2fe; }
         .phase-button-base.active { background-color: #0ea5e9; color: white; }
+        
         .phase-button-specific { border-color: #10b981; color: #047857; }
         .phase-button-specific:hover:not(.active) { background-color: #d1fae5; }
         .phase-button-specific.active { background-color: #059669; color: white; border-color: #059669; }
+        
         .phase-button-taper { border-color: #ef4444; color: #b91c1c; }
         .phase-button-taper:hover:not(.active) { background-color: #fee2e2; }
         .phase-button-taper.active { background-color: #dc2626; color: white; border-color: #dc2626; }
+        
         .week-button {
             padding: 0.5rem 0.75rem; border-radius: 0.375rem; border: 1px solid #9ca3af; 
-            color: #374151; font-weight: 500; text-align: center;
+            font-weight: 500; text-align: center;
             transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
-        .week-button.active { background-color: #0d9488; color: white; border-color: #0d9488; }
-        .week-button:not(.active):hover { background-color: #f0fdfa; border-color: #14b8a6; }
+        .week-button.active { 
+            background-color: #0284c7; 
+            color: white !important; 
+            border-color: #0284c7; 
+        }
+        
+        .week-button-text-preseason { color: #4b5563; } 
+        .week-button-text-preseason:not(.active):hover { background-color: #f3f4f6; border-color: #9ca3af; }
+
+        .week-button-text-base { color: #0369a1; } 
+        .week-button-text-base:not(.active):hover { background-color: #e0f2fe; border-color: #7dd3fc; }
+
+        .week-button-text-specific { color: #047857; } 
+        .week-button-text-specific:not(.active):hover { background-color: #d1fae5; border-color: #6ee7b7;}
+
+        .week-button-text-taper { color: #b91c1c; } 
+        .week-button-text-taper:not(.active):hover { background-color: #fee2e2; border-color: #fca5a5;}
+        
         .content-card {
             background-color: #fafaf9; padding: 1rem; 
             border-radius: 0.5rem; border: 1px solid #e7e5e4; 
         }
-        .content-card h3 { color: #0d9488; }
+        .content-card h3.phase-title-style { margin-bottom: 0.5rem; } 
+         
+        .overview-section-card { 
+            border-left-width: 4px;
+            border-bottom-width: 4px;
+            border-left-color: #0284c7; 
+            border-bottom-color: #f59e0b; 
+        }
+
         .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 300px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 350px; } }
         .data-table { width: 100%; margin-top: 0.5rem; border-collapse: collapse; font-size: 0.875rem; }
@@ -83,14 +130,17 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        #loading-message, #error-message { text-align: center; padding: 2rem; font-size: 1.125rem; font-weight: 500; }
+        #loading-message, #error-message, #login-error-message { text-align: center; padding: 2rem; font-size: 1.125rem; font-weight: 500; }
         #loading-message { color: #0369a1; }
-        #error-message { color: #dc2626; background-color: #fee2e2; border: 1px solid #f87171; border-radius: 0.5rem; }
+        #error-message, #login-error-message { color: #dc2626; background-color: #fee2e2; border: 1px solid #f87171; border-radius: 0.5rem; }
         
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #e5e7eb; border: 1px solid #e5e7eb; }
         .calendar-header { text-align: center; padding: 0.5rem; background-color: #f9fafb; font-weight: 600; font-size: 0.875rem; color: #374151; }
-        .calendar-day { background-color: #fff; padding: 0.5rem; min-height: 100px; font-size: 0.75rem; border: 1px solid #f3f4f6; }
-        .calendar-day.other-month { background-color: #f9fafb; color: #9ca3af; }
+        .calendar-day { background-color: #fff; padding: 0.5rem; min-height: 100px; font-size: 0.75rem; border: 1px solid #f3f4f6; cursor: default; }
+        .calendar-day.has-activity { cursor: pointer; }
+        .calendar-day.has-activity:hover { background-color: #f0f9ff; } 
+        .calendar-day.other-month { background-color: #f9fafb; color: #9ca3af; cursor: default;}
+        .calendar-day.other-month:hover { background-color: #f9fafb; }
         .calendar-day.is-today { background-color: #ecfdf5; border: 2px solid #10b981; }
         .calendar-day .day-number { font-weight: 600; margin-bottom: 0.25rem; display: block; }
         
@@ -216,14 +266,17 @@
             body * {
                 visibility: hidden;
             }
-            #this-weeks-plan-printable-area, #this-weeks-plan-printable-area * {
+            #this-weeks-plan-printable-area, #this-weeks-plan-printable-area *,
+            #calendar-day-details-printable-area, #calendar-day-details-printable-area * {
                 visibility: visible;
             }
-            #this-weeks-plan-printable-area {
+            #this-weeks-plan-printable-area, #calendar-day-details-printable-area {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
+                padding: 20px; 
+                background-color: white !important; 
             }
             .main-container, .content-card {
                 box-shadow: none !important;
@@ -232,12 +285,46 @@
             .schedule-table th, .schedule-table td {
                 border: 1px solid #ccc !important; 
             }
+            .pdf-button, .nav-button, header, nav, #calendar-controls, .calendar-grid, #pace-utils-content, #todays-training-card, #mileageChart, .chart-container p, #login-container {
+                display: none !important; 
+            }
         }
 
     </style>
 </head>
 <body class="min-h-screen p-4 py-8">
-    <div class="main-container w-full max-w-5xl mx-auto p-6 sm:p-8">
+    <div id="login-container" class="main-container">
+        <header class="mb-8 text-center">
+             <div class="header-logo-container mb-4"> 
+                <img src="https://iliosports.com/wp-content/uploads/2021/03/logo-13.png"
+                     alt="Helios Running Team Logo"
+                     class="header-logo"
+                     onerror="this.parentElement.innerHTML='<h1 class=\'text-2xl sm:text-3xl font-bold text-white\'>Helios Running</h1>'">
+            </div>
+            <h1 class="text-3xl sm:text-4xl main-title text-stone-800 mt-2"> 
+                <span class="title-project">project:</span> <span class="title-marathon">Marathon</span>
+            </h1>
+        </header>
+        <div class="space-y-4">
+            <div>
+                <label for="userIdInput" class="block text-sm font-medium text-stone-700">User ID:</label>
+                <input type="text" id="userIdInput" name="userIdInput" class="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm" placeholder="Enter your User ID">
+            </div>
+            <button id="loginButton" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500">
+                Load Plan
+            </button>
+            <div id="login-loading-message" class="hidden text-center text-sky-600">
+                <svg class="animate-spin h-5 w-5 text-sky-600 mx-auto mb-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading your plan...
+            </div>
+            <div id="login-error-message" class="hidden"></div>
+        </div>
+    </div>
+
+    <div id="main-app-wrapper" class="main-container hidden">
         <header class="mb-8 text-center"> 
             <div class="header-logo-container mb-4"> 
                 <img src="https://iliosports.com/wp-content/uploads/2021/03/logo-13.png"
@@ -254,10 +341,10 @@
         </header>
 
         <nav class="mb-8 flex flex-wrap justify-center gap-2 sm:gap-4 border-b border-stone-300 pb-4">
-            <button id="nav-overview" class="nav-button active">Plan Overview</button>
+            <button id="nav-overview" class="nav-button active-overview">Plan Overview</button>
             <button id="nav-plan" class="nav-button">Training Plan</button>
             <button id="nav-calendar" class="nav-button">Calendar</button>
-            <button id="nav-utils" class="nav-button">Pace Utilities</button>
+            <button id="nav-pacer" class="nav-button">Pacer</button>
         </nav>
 
         <main id="app-content">
@@ -273,18 +360,23 @@
     </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyQmt9LxRbebVlLYmd_YFy4IyvolljbFay2eWEY3CJXO4xA8okumVenUgxqa4jI3chk/exec'; 
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyNgT5VhUVuLCQywEyoOqPJ9TK35KBT3noHFZGo6yjb46OlxrQNXgzsSovHBdobHIxhMA/exec'; 
 const DEFAULT_RACE_DATE_STRING = '2025-11-09';
 
 let marathonPlan = null;
 let datedTrainingPlan = [];
-let currentRaceDate = null;
+let currentPlanStartDate = null; 
 let calendarCurrentDisplayDate = new Date();
 let currentTodaysActivityForAI = null; 
 
+const loginContainer = document.getElementById('login-container');
+const mainAppWrapper = document.getElementById('main-app-wrapper');
 const appContent = document.getElementById('app-content');
 const loadingMessageDiv = document.getElementById('loading-message');
 const errorMessageDiv = document.getElementById('error-message');
+const loginErrorMessageDiv = document.getElementById('login-error-message');
+const loginLoadingMessageDiv = document.getElementById('login-loading-message');
+
 let mileageChartInstance = null;
 let currentCardiacDriftAiPrompt = "";
 
@@ -312,7 +404,7 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
     };
     
     try {
-        const response = await fetch(WEB_APP_URL, { 
+        const response = await fetch(currentWebAppUrl, { 
             method: 'POST',
             mode: 'cors',
             cache: 'no-cache',
@@ -323,18 +415,44 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
             body: JSON.stringify(payloadToAppsScript)
         });
 
-        const resultText = await response.text();
+        const resultText = await response.text(); 
         let resultFromProxy;
+
+        if (!response.ok) {
+            console.error("Error response from Apps Script proxy:", response.status, response.statusText, resultText);
+            let errorMsg = `Error from server proxy (Status: ${response.status} ${response.statusText}).`;
+            try {
+                const errJson = JSON.parse(resultText);
+                if (errJson && errJson.error) {
+                    errorMsg += ` Server detail: ${typeof errJson.error === 'object' ? JSON.stringify(errJson.error) : errJson.error}`;
+                } else {
+                    errorMsg += ` Server response: <pre>${resultText.substring(0, 500)}...</pre>`;
+                }
+            } catch (e) {
+                 errorMsg += ` Server response: <pre>${resultText.substring(0, 500)}...</pre>`;
+            }
+            targetElement.innerHTML = `<p>${errorMsg} Please check Apps Script execution logs.</p>`;
+            targetElement.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+            return;
+        }
+        
         try {
             resultFromProxy = JSON.parse(resultText);
         } catch (parseError) {
             console.error("Failed to parse response from Apps Script proxy as JSON:", resultText);
-            throw new Error(`Invalid response from server proxy. Response: ${resultText.substring(0, 200)}...`);
+            targetElement.innerHTML = `<p>Error: Invalid response from server. Server said: <pre>${resultText.substring(0, 500)}...</pre> Please check Apps Script logs.</p>`;
+            targetElement.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+            return; 
         }
         
         if (resultFromProxy.error) {
-             console.error("Error from Apps Script proxy:", resultFromProxy.error);
-             throw new Error(typeof resultFromProxy.error === 'object' ? JSON.stringify(resultFromProxy.error) : resultFromProxy.error);
+             console.error("Error from Apps Script proxy (parsed):", resultFromProxy.error);
+             targetElement.innerHTML = `<p>Server Error: ${typeof resultFromProxy.error === 'object' ? JSON.stringify(resultFromProxy.error) : resultFromProxy.error}. Check Apps Script logs.</p>`;
+             targetElement.classList.remove('hidden');
+             loadingIndicator.classList.add('hidden');
+             return;
         }
         
         const geminiResult = resultFromProxy; 
@@ -355,21 +473,31 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
                 if (candidate.safetyRatings) {
                      finishReasonMessage += ` Safety ratings: ${JSON.stringify(candidate.safetyRatings)}`;
                 }
-                targetElement.innerHTML = `<p>${finishReasonMessage}</p>`;
+                targetElement.innerHTML = `<p>${finishReasonMessage} Please try rephrasing or contact support if this persists.</p>`;
                 targetElement.classList.remove('hidden');
             } else {
                 console.error("Gemini API (via Proxy): Response structure is missing expected text content.", JSON.stringify(geminiResult, null, 2));
-                targetElement.innerHTML = "<p>Sorry, the AI response was not in the expected format.</p>";
+                targetElement.innerHTML = "<p>Sorry, the AI response was not in the expected format. Please try again.</p>";
                 targetElement.classList.remove('hidden');
             }
         } else {
             console.error("Gemini API (via Proxy): No candidates found in the response.", JSON.stringify(geminiResult, null, 2));
-            targetElement.innerHTML = "<p>Sorry, no response was generated by the AI.</p>";
+            targetElement.innerHTML = "<p>Sorry, no response was generated by the AI. Please try again.</p>";
             targetElement.classList.remove('hidden');
         }
-    } catch (error) {
-        console.error('Error calling Apps Script proxy for Gemini:', error);
-        targetElement.innerHTML = `<p>An error occurred: ${error.message}. Check console.</p>`;
+    } catch (error) { 
+        console.error('Network or other error calling Apps Script proxy for Gemini:', error);
+        let errorMessageText = "An error occurred while trying to communicate with the server proxy.";
+        if (error.message) {
+            errorMessageText += ` Details: ${error.message}.`;
+        } else {
+            try {
+                errorMessageText += ` Details: ${JSON.stringify(error)}.`;
+            } catch (e) {
+                errorMessageText += " No further details available.";
+            }
+        }
+        targetElement.innerHTML = `<p>${errorMessageText} Please check your internet connection, the Apps Script URL, and the browser console for more specific errors (like CORS). Also, verify Apps Script deployment and execution logs.</p>`;
         targetElement.classList.remove('hidden');
     } finally {
         loadingIndicator.classList.add('hidden');
@@ -377,9 +505,16 @@ async function callGeminiApi(prompt, targetElementId, loadingElementId) {
 }
 
 
-async function fetchMarathonPlan() {
+async function fetchMarathonPlan(webAppUrlToUse) {
+    if (!webAppUrlToUse) {
+        console.error("No Web App URL provided for fetching plan.");
+        loginErrorMessageDiv.textContent = "Configuration error: Web App URL is missing.";
+        loginErrorMessageDiv.classList.remove('hidden');
+        loginLoadingMessageDiv.classList.add('hidden');
+        return false;
+    }
     try {
-        const response = await fetch(WEB_APP_URL); 
+        const response = await fetch(webAppUrlToUse); 
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Network response was not ok: ${response.status} ${response.statusText}. Details: ${errorText}`);
@@ -391,32 +526,26 @@ async function fetchMarathonPlan() {
         if (!data.philosophy || !data.philosophy.title || !Array.isArray(data.philosophy.content) ||
             !data.paceGuide || !data.paceGuide.title || !Array.isArray(data.paceGuide.paces) ||
             !data.generalNotes || !data.generalNotes.title || !Array.isArray(data.generalNotes.notes) ||
-            !Array.isArray(data.phases)) {
-            throw new Error("Fetched data is incomplete. Check Apps Script `doGet` and Google Sheet structure.");
+            !Array.isArray(data.phases) || !data.planStartDate) { 
+            throw new Error("Fetched data is incomplete or missing planStartDate. Check Apps Script `doGet`.");
         }
         marathonPlan = data;
+        currentPlanStartDate = new Date(marathonPlan.planStartDate + 'T00:00:00'); 
 
-        const storedRaceDate = localStorage.getItem('marathonRaceDate');
-        if (storedRaceDate) {
-            const parsedDate = new Date(storedRaceDate + 'T00:00:00');
-            if (isValidDate(parsedDate)) currentRaceDate = parsedDate;
+        if (!isValidDate(currentPlanStartDate)) {
+            throw new Error("Invalid planStartDate received from the server.");
         }
         
-        if (!currentRaceDate) {
-            currentRaceDate = new Date(DEFAULT_RACE_DATE_STRING + 'T00:00:00');
-            localStorage.setItem('marathonRaceDate', DEFAULT_RACE_DATE_STRING);
-        }
+        calculateAndStoreDatedTrainingPlan(currentPlanStartDate);
+        calendarCurrentDisplayDate = new Date(currentPlanStartDate.getFullYear(), currentPlanStartDate.getMonth(), 1);
         
-        calculateAndStoreDatedTrainingPlan(currentRaceDate);
-        calendarCurrentDisplayDate = new Date(currentRaceDate.getFullYear(), currentRaceDate.getMonth(), 1);
-        
-        initializeApp();
+        return true; 
     } catch (error) {
-        if(loadingMessageDiv) loadingMessageDiv.classList.add('hidden');
-        if(errorMessageDiv) {
-            errorMessageDiv.textContent = `Error loading training plan: ${error.message}. Please ensure the Google Sheet is accessible and the Apps Script is deployed correctly.`;
-            errorMessageDiv.classList.remove('hidden');
-        }
+        console.error('Failed to fetch marathon plan:', error);
+        loginErrorMessageDiv.textContent = `Error loading plan: ${error.message}. Ensure User ID is correct and the corresponding Google Sheet & Apps Script are setup.`;
+        loginErrorMessageDiv.classList.remove('hidden');
+        loginLoadingMessageDiv.classList.add('hidden');
+        return false; 
     }
 }
 
@@ -428,15 +557,55 @@ function initializeApp() {
     document.getElementById('nav-overview').addEventListener('click', renderOverview);
     document.getElementById('nav-plan').addEventListener('click', renderTrainingPlan);
     document.getElementById('nav-calendar').addEventListener('click', renderCalendarTab);
-    document.getElementById('nav-utils').addEventListener('click', renderPaceUtilities);
+    document.getElementById('nav-pacer').addEventListener('click', renderPaceUtilities);
     
     renderOverview();
+    mainAppWrapper.classList.remove('hidden');
+    loginContainer.classList.add('hidden');
 }
 
+async function handleLogin() {
+    const userIdInput = document.getElementById('userIdInput');
+    const userId = userIdInput.value.trim().toUpperCase(); 
+
+    loginErrorMessageDiv.classList.add('hidden');
+    loginLoadingMessageDiv.classList.remove('hidden');
+
+    currentWebAppUrl = userSpecificDataSources[userId];
+
+    if (currentWebAppUrl) {
+        localStorage.setItem('lastUserID', userId); 
+        localStorage.setItem('lastWebAppUrl', currentWebAppUrl); 
+
+        const success = await fetchMarathonPlan(currentWebAppUrl);
+        if (success) {
+            initializeApp(); 
+        } else {
+            loginLoadingMessageDiv.classList.add('hidden');
+            localStorage.removeItem('lastUserID'); 
+            localStorage.removeItem('lastWebAppUrl');
+        }
+    } else {
+        loginErrorMessageDiv.textContent = "Invalid User ID. Please try again or contact administrator.";
+        loginErrorMessageDiv.classList.remove('hidden');
+        loginLoadingMessageDiv.classList.add('hidden');
+        localStorage.removeItem('lastUserID');
+        localStorage.removeItem('lastWebAppUrl');
+    }
+}
+
+
 function setActiveNav(activeId) {
-    document.querySelectorAll('.nav-button').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.id === activeId) btn.classList.add('active');
+    const navButtons = document.querySelectorAll('.nav-button');
+    navButtons.forEach(btn => {
+        btn.classList.remove('active-overview', 'active-plan', 'active-calendar', 'active-pacer');
+        if (btn.id === activeId) {
+            if (activeId === 'nav-overview') btn.classList.add('active-overview');
+            else if (activeId === 'nav-plan') btn.classList.add('active-plan');
+            else if (activeId === 'nav-calendar') btn.classList.add('active-calendar');
+            else if (activeId === 'nav-pacer') btn.classList.add('active-pacer');
+            else btn.classList.add('active-overview'); 
+        }
     });
 }
 
@@ -462,84 +631,49 @@ function isSameDay(date1, date2) {
            date1.getDate() === date2.getDate();
 }
 
-function calculateAndStoreDatedTrainingPlan(raceDateInput) {
-    if (!marathonPlan || !marathonPlan.phases || !isValidDate(raceDateInput)) {
-        datedTrainingPlan = []; return;
+function calculateAndStoreDatedTrainingPlan(planStartDate) {
+    if (!marathonPlan || !marathonPlan.phases || !isValidDate(planStartDate)) {
+        datedTrainingPlan = []; 
+        console.error("Cannot calculate dated plan: Missing plan data or invalid start date.", marathonPlan, planStartDate);
+        return;
     }
-    currentRaceDate = new Date(raceDateInput); 
-    localStorage.setItem('marathonRaceDate', currentRaceDate.toISOString().split('T')[0]);
+    
     let allDaysScheduled = [];
     marathonPlan.phases.forEach(phase => {
         phase.weeks.forEach(week => {
             week.days.forEach(dayString => allDaysScheduled.push({
-                activity: dayString, notes: week.notes || "",
-                phaseName: phase.name, weekNum: week.weekNum, totalKm: week.totalKm
+                activity: dayString, 
+                notes: week.notes || "",
+                phaseName: phase.name, 
+                weekNum: week.weekNum, 
+                totalKm: week.totalKm
             }));
         });
     });
+
     datedTrainingPlan = [];
-    let tempCurrentDate = new Date(currentRaceDate); 
-    for (let i = allDaysScheduled.length - 1; i >= 0; i--) {
-        datedTrainingPlan.unshift({ date: new Date(tempCurrentDate), ...allDaysScheduled[i] });
-        tempCurrentDate = addDays(tempCurrentDate, -1); 
-    }
+    let currentDate = new Date(planStartDate); 
+
+    allDaysScheduled.forEach(scheduledItem => {
+        datedTrainingPlan.push({ 
+            date: new Date(currentDate),
+            ...scheduledItem
+        });
+        currentDate = addDays(currentDate, 1); 
+    });
 }
-
-function getTodaysTrainingAdvice() {
-    if (!currentTodaysActivityForAI) {
-        const responseDiv = document.getElementById('todays-advice-response');
-        if (responseDiv) {
-            responseDiv.innerHTML = "<p>No training scheduled for today to get advice on, or data not loaded.</p>";
-            responseDiv.classList.remove('hidden');
-        }
-        const loadingDiv = document.getElementById('todays-advice-loading');
-        if (loadingDiv) loadingDiv.classList.add('hidden');
-        return;
-    }
-
-    const activityDetails = currentTodaysActivityForAI;
-    const activityType = activityDetails.activity.toLowerCase();
-    let specificAdviceHint = ""; 
-
-    if (activityType.includes("interval")) {
-        specificAdviceHint = "For these intervals, emphasize starting the first few repeats at a controlled effort before increasing intensity. Also, mention the importance of recovery between intervals, and proper warm-up and cool-down.";
-    } else if (activityType.includes("tempo")) {
-        specificAdviceHint = "For this tempo run, advise on maintaining a comfortably hard, steady pace and staying relaxed, especially in the early stages. Mention focusing on breathing and form.";
-    } else if (activityType.includes("long run")) {
-        specificAdviceHint = "For this long run, suggest focusing on even pacing, practicing fueling/hydration strategy as if it were race day, and the mental aspect of endurance. Also, advise on post-run recovery.";
-    } else if (activityType.includes("easy run") || activityType.includes("fartlek") || activityType.includes("hills")) {
-        specificAdviceHint = "For this run, highlight the importance of a conversational pace if it's an easy run, or the specific purpose if it's fartlek/hills (e.g., varying intensity, building strength). Include warm-up and cool-down advice.";
-    } else if (activityType.includes("rest") || activityType.includes("active recovery") || activityType.includes("cross-train")) {
-        specificAdviceHint = "For this rest/active recovery/cross-train day, emphasize its importance for muscle repair, preventing overtraining, and overall recovery in the training process. Suggest light activities if it's active recovery or cross-training.";
-    }
-
-    const prompt = `
-        My marathon training plan for today (${formatDate(activityDetails.date, {weekday: 'long', month: 'long', day: 'numeric'})}) is:
-        Activity: ${activityDetails.activity.replace(/^[^:]+:\s*/, '')}
-        Phase: ${activityDetails.phaseName}
-        Week: ${activityDetails.weekNum}
-        Weekly Notes (if any apply to today): ${activityDetails.notes || "None"}
-
-        Please provide concise, actionable advice for this specific training session. 
-        ${specificAdviceHint}
-        Keep it positive and encouraging. Format as a bulleted list if appropriate.
-        **Your entire response must be ONLY in Greek. Do not include any English text, introductions, or conversational filler.**
-    `;
-    callGeminiApi(prompt, 'todays-advice-response', 'todays-advice-loading');
-}
-
 
 function renderTodaysTraining() {
     const container = document.getElementById('todays-training-content');
     if (!container) return;
 
-    currentTodaysActivityForAI = null; 
-
-    if (!currentRaceDate) {
-        container.innerHTML = `<p class="text-sm text-sky-700">Set your race date in the <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">Calendar Tab</button> to see today's training. Default is ${DEFAULT_RACE_DATE_STRING}.</p>`;
+    if (!currentPlanStartDate) {
+        container.innerHTML = `<p class="text-sm text-sky-700">Plan starting date not found. Please check configuration.</p>`;
         return;
     }
-    if (datedTrainingPlan.length === 0 && currentRaceDate && marathonPlan) calculateAndStoreDatedTrainingPlan(currentRaceDate);
+    if (datedTrainingPlan.length === 0 ) {
+        calculateAndStoreDatedTrainingPlan(currentPlanStartDate);
+    }
     
     const today = new Date(); 
     today.setHours(0,0,0,0); 
@@ -556,27 +690,14 @@ function renderTodaysTraining() {
         const dayName = todaysActivity.date.toLocaleDateString(undefined, { weekday: 'long' });
         let activityText = todaysActivity.activity.replace(/^[^:]+:\s*/, '');
         
-        let adviceButtonHtml = `
-            <div class="mt-3">
-                <button id="getTodaysAdviceBtn" class="ai-button">✨ Advice</button>
-                <div id="todays-advice-loading" class="hidden mt-2"><span class="gemini-loading-spinner"></span> Fetching advice...</div>
-                <div id="todays-advice-response" class="gemini-response-area hidden"></div>
-            </div>`;
-
         container.innerHTML = `
-            <h3 class="text-lg font-semibold text-sky-700 mb-1">Today's Training (${dayName}, ${formatDate(today)})</h3>
+            <h3 class="text-lg font-semibold text-sky-700 mb-1">Today (${dayName}, ${formatDate(today)})</h3>
             <p class="text-stone-700">${activityText}</p>
             ${todaysActivity.notes ? `<p class="text-sm text-stone-600 italic mt-1"><strong>Weekly Notes:</strong> ${todaysActivity.notes}</p>` : ''}
             <p class="text-xs text-stone-500 mt-1">Phase: ${todaysActivity.phaseName} | Week: ${todaysActivity.weekNum}</p>
-            ${adviceButtonHtml}
         `;
-        const adviceBtn = document.getElementById('getTodaysAdviceBtn');
-        if (adviceBtn) {
-            adviceBtn.addEventListener('click', getTodaysTrainingAdvice);
-        }
-
     } else {
-        container.innerHTML = `<h3 class="text-lg font-semibold text-sky-700 mb-1">Today's Training (${formatDate(today)})</h3><p class="text-stone-700">No specific training scheduled for today based on your race date (${formatDate(currentRaceDate)}), or you are outside the plan's duration.</p><p class="text-sm text-stone-600">This might be a rest day or before the plan starts / after it ends.</p>`;
+        container.innerHTML = `<h3 class="text-lg font-semibold text-sky-700 mb-1">Today (${formatDate(today)})</h3><p class="text-stone-700">No specific training scheduled for today based on your plan's start date (${formatDate(currentPlanStartDate)}).</p>`;
     }
 }
 
@@ -584,13 +705,13 @@ function renderThisWeeksPlan() {
     const container = document.getElementById('this-weeks-plan-content');
     if (!container) return;
 
-    if (!currentRaceDate) {
-        container.innerHTML = `<p class="text-sm text-sky-700">Set your race date in the <button onclick="document.getElementById('nav-calendar').click();" class="underline font-semibold">Calendar Tab</button> to see this week's plan.</p>`;
+    if (!currentPlanStartDate) {
+        container.innerHTML = `<p class="text-sm text-sky-700">Plan starting date not found. Please check configuration.</p>`;
         return;
     }
 
-    if (datedTrainingPlan.length === 0 && currentRaceDate && marathonPlan) {
-        calculateAndStoreDatedTrainingPlan(currentRaceDate);
+    if (datedTrainingPlan.length === 0) {
+        calculateAndStoreDatedTrainingPlan(currentPlanStartDate);
     }
 
     const today = new Date();
@@ -641,7 +762,7 @@ function renderThisWeeksPlan() {
 
         container.innerHTML = `
             <div class="flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-green-700">This Week's Plan (Wk ${weekTitleInfo.weekNum} - ${weekTitleInfo.phaseName})</h3>
+                <h3 class="text-lg font-semibold text-green-700">This Week (Wk ${weekTitleInfo.weekNum} - ${weekTitleInfo.phaseName})</h3>
                 <button id="printWeekPdfBtn" class="pdf-button">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M5 2.5A2.5 2.5 0 0 1 7.5 0h5A2.5 2.5 0 0 1 15 2.5V5h-2.55a3 3 0 0 0-4.9 0H5V2.5zM10 6a2 2 0 0 0-1.936 1.5H5V15a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V7.5h-3.064A2 2 0 0 0 10 6zm0 2a.75.75 0 0 1 .75.75v.032l1.533.306a.75.75 0 0 1-.293 1.455l-1.68-.335a.75.75 0 0 1-.59-.518L9.25 8.75A.75.75 0 0 1 10 8z" clip-rule="evenodd" /></svg>
                     PDF
@@ -668,7 +789,7 @@ function renderThisWeeksPlan() {
         if (pdfBtn) pdfBtn.addEventListener('click', printWeekToPdf);
 
     } else {
-        container.innerHTML = `<h3 class="text-lg font-semibold text-green-700 mb-1">This Week's Plan</h3><p class="text-stone-600">No training scheduled for this week based on your race date, or the plan is not loaded.</p>`;
+        container.innerHTML = `<h3 class="text-lg font-semibold text-green-700 mb-1">This Week's Plan</h3><p class="text-stone-600">No training scheduled for this week based on your plan's start date, or the plan is not loaded.</p>`;
     }
 }
 
@@ -689,25 +810,28 @@ function renderOverview() {
     overviewSection.className = "space-y-6";
 
     overviewSection.innerHTML = `
-        <div id="todays-training-card" class="content-card p-4 mb-6">
-            <div id="todays-training-content"></div> 
+        <div class="md:flex md:space-x-6 space-y-6 md:space-y-0 mb-6">
+            <div id="todays-training-card" class="content-card p-4 md:flex-1">
+                <div id="todays-training-content"></div> 
+            </div>
+            <div id="this-weeks-plan-card" class="content-card p-4 md:flex-1">
+                <div id="this-weeks-plan-content"></div> 
+            </div>
         </div>
-        <div id="this-weeks-plan-card" class="content-card p-4 mb-6">
-            <div id="this-weeks-plan-content"></div> 
-        </div>
-        <div class="content-card">
+
+        <div class="content-card overview-section-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.philosophy.title || 'Training Philosophy'}</h2>
             ${createHtmlList(marathonPlan.philosophy.content)}
         </div>
-        <div class="content-card">
+        <div class="content-card overview-section-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.paceGuide.title || 'Pace Guide'}</h2>
             ${createHtmlList(marathonPlan.paceGuide.paces)}
         </div>
-        <div class="content-card">
+        <div class="content-card overview-section-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">${marathonPlan.generalNotes.title || 'Important Notes'}</h2>
             ${createHtmlList(marathonPlan.generalNotes.notes)}
         </div>
-        <div class="content-card">
+        <div class="content-card overview-section-card">
             <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-3">Overall Mileage Progression</h2>
             <div class="chart-container bg-white p-2 rounded-md shadow">
                 <canvas id="mileageChart"></canvas>
@@ -799,9 +923,7 @@ function renderTrainingPlan() {
 
 function formatPhaseDuration(durationString) {
     if (!durationString || typeof durationString !== 'string') return 'N/A';
-    const weeksMatch = durationString.match(/(\S+\s+Weeks)/i); 
     const dateMatch = durationString.match(/\(([^)]+)\)/);   
-    let weeksPart = weeksMatch ? `[${weeksMatch[1].replace('~','').trim()}]` : "";
     let datePart = "";
     if (dateMatch) {
         let dates = dateMatch[1];
@@ -809,8 +931,18 @@ function formatPhaseDuration(durationString) {
         for (const longMonth in monthReplacements) dates = dates.replace(new RegExp(longMonth, "g"), monthReplacements[longMonth]);
         datePart = `(${dates})`;
     }
-    return `${weeksPart} ${datePart}`.trim();
+    return datePart.trim(); 
 }
+
+function getPhaseTitleTextColorClass(phaseName) {
+    const nameLower = phaseName.toLowerCase();
+    if (nameLower.includes("preseason")) return "text-gray-600"; 
+    if (nameLower.includes("base")) return "text-sky-700";    
+    if (nameLower.includes("specific")) return "text-green-700"; 
+    if (nameLower.includes("taper")) return "text-red-700";     
+    return "text-sky-700"; 
+}
+
 
 function renderPhaseDetails(phaseIndex) {
     if (!marathonPlan) return;
@@ -821,12 +953,19 @@ function renderPhaseDetails(phaseIndex) {
     const phaseDetailsDiv = document.getElementById('phase-details');
     const weekDetailsContainer = document.getElementById('week-details-container');
     if(weekDetailsContainer) weekDetailsContainer.innerHTML = ''; 
-    const weekButtonsHtml = (phase.weeks && Array.isArray(phase.weeks)) ? phase.weeks.map((week, index) =>
-        `<button class="week-button" data-phase-index="${phaseIndex}" data-week-index="${index}">Week ${week.weekNum}</button>`
-    ).join('') : '<p>No weeks available for this phase.</p>';
+    
+    const phaseTitleColorClass = getPhaseTitleTextColorClass(phase.name);
+    const formattedDuration = formatPhaseDuration(phase.duration); 
+
+    const weekButtonsHtml = (phase.weeks && Array.isArray(phase.weeks)) ? phase.weeks.map((week, index) => {
+        const weekDateRange = getWeekDateRangeString(week, phase.name);
+        const weekButtonTextColorClass = getPhaseTextColorClass(phase.name); 
+        return `<button class="week-button ${weekButtonTextColorClass}" data-phase-index="${phaseIndex}" data-week-index="${index}">${weekDateRange}</button>`
+    }).join('') : '<p>No weeks available for this phase.</p>';
+
     if(phaseDetailsDiv) phaseDetailsDiv.innerHTML = `
         <div class="content-card">
-            <h3 class="text-lg sm:text-xl font-semibold mb-2">${phase.name} ${formatPhaseDuration(phase.duration)}</h3>
+            <h3 class="text-lg sm:text-xl font-semibold mb-2 phase-title-style ${phaseTitleColorClass}">${phase.name} ${formattedDuration}</h3>
             <p class="text-sm text-stone-600 mb-1"><strong>Goal:</strong> ${phase.goal || 'N/A'}</p>
             <p class="text-sm text-stone-600 mb-3"><strong>Mileage Range:</strong> ${phase.mileageRange || 'N/A'}</p>
             <h4 class="text-md font-medium text-stone-700 mb-2">Select a Week:</h4>
@@ -834,16 +973,68 @@ function renderPhaseDetails(phaseIndex) {
         </div>`;
     document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(button => {
         button.addEventListener('click', (e) => {
-            document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(btn => btn.classList.remove('active'));
-            e.target.classList.add('active');
-            renderWeekDetails(parseInt(e.target.dataset.phaseIndex), parseInt(e.target.dataset.weekIndex));
+            document.querySelectorAll(`#week-navigation-${phaseIndex} .week-button`).forEach(btn => {
+                btn.classList.remove('active');
+                const pIdxForClass = parseInt(btn.dataset.phaseIndex); 
+                const phaseNameForClass = marathonPlan.phases[pIdxForClass].name;
+                btn.classList.remove('bg-sky-600', 'border-sky-600', 'text-white'); 
+                btn.classList.add(getPhaseTextColorClass(phaseNameForClass)); 
+            });
+            e.currentTarget.classList.add('active');
+            e.currentTarget.classList.remove(getPhaseTextColorClass(phase.name)); 
+            renderWeekDetails(parseInt(e.currentTarget.dataset.phaseIndex), parseInt(e.currentTarget.dataset.weekIndex));
         });
     });
     if (phase.weeks && phase.weeks.length > 0) {
         const firstWeekButton = document.querySelector(`#week-navigation-${phaseIndex} .week-button`);
-        if (firstWeekButton) { firstWeekButton.classList.add('active'); renderWeekDetails(phaseIndex, 0); }
+        if (firstWeekButton) { 
+            firstWeekButton.classList.add('active'); 
+            firstWeekButton.classList.remove(getPhaseTextColorClass(phase.name));
+            renderWeekDetails(phaseIndex, 0); 
+        }
     }
 }
+
+function getWeekDateRangeString(weekObject, phaseName) {
+    if (!datedTrainingPlan || datedTrainingPlan.length === 0 || !currentPlanStartDate) {
+        return `Week ${weekObject.weekNum}`; 
+    }
+    const activitiesInThisWeek = datedTrainingPlan.filter(dayActivity => 
+        dayActivity.phaseName === phaseName && dayActivity.weekNum == weekObject.weekNum 
+    );
+
+    if (activitiesInThisWeek.length === 0) {
+        return `Week ${weekObject.weekNum}`; 
+    }
+    const weekDates = activitiesInThisWeek.map(activity => new Date(activity.date)).sort((a, b) => a - b);
+    
+    const startDate = weekDates[0];
+    const endDate = weekDates[weekDates.length - 1];
+
+    const options = { month: 'short', day: 'numeric' };
+
+    if (startDate && endDate) {
+        if (isSameDay(startDate, endDate)) { 
+            return startDate.toLocaleDateString(undefined, options);
+        }
+        if (startDate.getMonth() === endDate.getMonth()) {
+            return `${startDate.toLocaleDateString(undefined, { month: 'short' })} ${startDate.getDate()} - ${endDate.getDate()}`;
+        } else {
+            return `${startDate.toLocaleDateString(undefined, options)} - ${endDate.toLocaleDateString(undefined, options)}`;
+        }
+    }
+    return `Week ${weekObject.weekNum}`; 
+}
+
+function getPhaseTextColorClass(phaseName) {
+    const nameLower = phaseName.toLowerCase();
+    if (nameLower.includes("preseason")) return "week-button-text-preseason";
+    if (nameLower.includes("base")) return "week-button-text-base";
+    if (nameLower.includes("specific")) return "week-button-text-specific";
+    if (nameLower.includes("taper")) return "week-button-text-taper";
+    return "week-button-text-base"; 
+}
+
 
 function getDisplayKm(totalKmString) {
     if (!totalKmString || typeof totalKmString !== 'string') return 'N/A';
@@ -895,43 +1086,59 @@ function renderCalendarTab() {
     appContent.innerHTML = '';
     const calendarSection = document.createElement('section');
     calendarSection.id = "calendar-content"; calendarSection.className = "space-y-6";
-    const raceDateValue = currentRaceDate ? currentRaceDate.toISOString().split('T')[0] : DEFAULT_RACE_DATE_STRING;
-    calendarSection.innerHTML = `
-        <div class="content-card">
-            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Training Calendar</h2>
+    
+    let dateInputHtml = '';
+    if (!currentPlanStartDate) { 
+         dateInputHtml = `
             <div class="mb-6">
-                <label for="raceDateInput" class="block text-sm font-medium text-stone-700 mb-1">Select Your Race Date:</label>
-                <input type="date" id="raceDateInput" name="raceDateInput" value="${raceDateValue}" class="mt-1 block w-full md:w-1/2 px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
-                <p class="text-xs text-stone-500 mt-1">Plan ends on this date.</p>
-            </div>
+                <label for="planStartDateInput" class="block text-sm font-medium text-stone-700 mb-1">Set Plan Start Date (if not loaded):</label>
+                <input type="date" id="planStartDateInput" name="planStartDateInput" value="${DEFAULT_RACE_DATE_STRING}" class="mt-1 block w-full md:w-1/2 px-3 py-2 border border-stone-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
+                <button id="setPlanStartDateBtn" class="mt-2 px-4 py-2 bg-sky-500 text-white rounded-md text-sm">Set Start Date</button>
+                <p class="text-xs text-stone-500 mt-1">This should be loaded from your Google Sheet. Use this only if needed.</p>
+            </div>`;
+    }
+
+
+    calendarSection.innerHTML = `
+        <div class="content-card overview-section-card">
+            <h2 class="text-xl sm:text-2xl font-semibold text-sky-700 mb-4">Training Calendar</h2>
+            ${dateInputHtml}
             <div id="calendar-controls" class="flex justify-between items-center mb-4">
                 <button id="prevMonthBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm">&lt; Prev</button>
                 <h3 id="currentMonthYear" class="text-lg font-semibold text-stone-700"></h3>
                 <button id="nextMonthBtn" class="px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm">Next &gt;</button>
             </div>
             <div id="calendar-grid-container" class="calendar-grid"></div>
+            <div id="calendar-day-details-content" class="mt-4"></div>
         </div>`;
     appContent.appendChild(calendarSection);
-    document.getElementById('raceDateInput').addEventListener('change', (event) => {
-        const newRaceDate = new Date(event.target.value + 'T00:00:00'); 
-        if (isValidDate(newRaceDate)) {
-            currentRaceDate = newRaceDate;
-            calculateAndStoreDatedTrainingPlan(newRaceDate);
-            calendarCurrentDisplayDate = new Date(newRaceDate.getFullYear(), newRaceDate.getMonth(), 1);
-            renderCalendarGrid();
-            if (document.getElementById('nav-overview').classList.contains('active')) {
-                 renderOverview(); 
-            } else {
-                 const today = new Date(); today.setHours(0,0,0,0);
-                 currentTodaysActivityForAI = datedTrainingPlan.find(item => {
-                    const itemDate = new Date(item.date); itemDate.setHours(0,0,0,0);
-                    return isSameDay(itemDate, today);
-                 });
-            }
+
+    if (!currentPlanStartDate) {
+        const setStartDateBtn = document.getElementById('setPlanStartDateBtn');
+        if(setStartDateBtn) {
+            setStartDateBtn.addEventListener('click', () => {
+                const dateVal = document.getElementById('planStartDateInput').value;
+                if (dateVal) {
+                    currentPlanStartDate = new Date(dateVal + 'T00:00:00');
+                    if (isValidDate(currentPlanStartDate)) {
+                        calculateAndStoreDatedTrainingPlan(currentPlanStartDate);
+                        calendarCurrentDisplayDate = new Date(currentPlanStartDate.getFullYear(), currentPlanStartDate.getMonth(), 1);
+                        renderCalendarGrid(); 
+                        document.getElementById('calendar-day-details-content').innerHTML = '';
+                        if (document.getElementById('nav-overview').classList.contains('active-overview')) {
+                            renderOverview(); 
+                        }
+                    } else {
+                        alert("Invalid start date selected.");
+                        currentPlanStartDate = null;
+                    }
+                }
+            });
         }
-    });
-    document.getElementById('prevMonthBtn').addEventListener('click', () => { calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() - 1); renderCalendarGrid(); });
-    document.getElementById('nextMonthBtn').addEventListener('click', () => { calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() + 1); renderCalendarGrid(); });
+    }
+    
+    document.getElementById('prevMonthBtn').addEventListener('click', () => { calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() - 1); renderCalendarGrid(); document.getElementById('calendar-day-details-content').innerHTML = ''; });
+    document.getElementById('nextMonthBtn').addEventListener('click', () => { calendarCurrentDisplayDate.setMonth(calendarCurrentDisplayDate.getMonth() + 1); renderCalendarGrid(); document.getElementById('calendar-day-details-content').innerHTML = ''; });
     renderCalendarGrid();
 }
 
@@ -940,6 +1147,14 @@ function renderCalendarGrid() {
     const monthYearDisplay = document.getElementById('currentMonthYear');
     if (!gridContainer || !monthYearDisplay) return;
     gridContainer.innerHTML = ''; 
+    
+    if (!currentPlanStartDate && datedTrainingPlan.length === 0) {
+        gridContainer.innerHTML = "<p class='col-span-7 text-center p-4 text-stone-600'>Please set the Plan Start Date in your Google Sheet or ensure it's loaded correctly.</p>";
+        monthYearDisplay.textContent = new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+        return;
+    }
+
+
     const year = calendarCurrentDisplayDate.getFullYear(); const month = calendarCurrentDisplayDate.getMonth(); 
     monthYearDisplay.textContent = calendarCurrentDisplayDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
     const firstDayOfMonth = new Date(year, month, 1); const lastDayOfMonth = new Date(year, month + 1, 0);
@@ -952,22 +1167,63 @@ function renderCalendarGrid() {
     for (let day = 1; day <= daysInMonth; day++) {
         const cell = document.createElement('div'); cell.className = 'calendar-day';
         const currentDateInLoop = new Date(year, month, day); currentDateInLoop.setHours(0,0,0,0);
+        
+        const activityForDay = datedTrainingPlan.find(item => { 
+            const itemDate = new Date(item.date); 
+            itemDate.setHours(0,0,0,0);
+            return isSameDay(itemDate, currentDateInLoop); 
+        });
+
         if (isSameDay(currentDateInLoop, today)) cell.classList.add('is-today');
+        
         let activityHtml = '';
-        if (datedTrainingPlan.length > 0) {
-            const activityForDay = datedTrainingPlan.find(item => { const id = new Date(item.date); id.setHours(0,0,0,0); return isSameDay(id, currentDateInLoop); });
-            if (activityForDay) {
-                let activityText = activityForDay.activity.replace(/^[^:]+:\s*/, ''); 
-                activityHtml = `<span class="activity-thumbnail ${getActivityThumbnailClass(activityText)}">${activityText.substring(0,12)}${activityText.length > 12 ? '...' : ''}</span>`;
-            }
+        if (activityForDay) {
+            cell.classList.add('has-activity');
+            cell.addEventListener('click', () => renderSelectedCalendarDayDetails(currentDateInLoop));
+            let activityText = activityForDay.activity.replace(/^[^:]+:\s*/, ''); 
+            activityHtml = `<span class="activity-thumbnail ${getActivityThumbnailClass(activityText)}">${activityText.substring(0,12)}${activityText.length > 12 ? '...' : ''}</span>`;
         }
         cell.innerHTML = `<span class="day-number">${day}</span>` + activityHtml;
         gridContainer.appendChild(cell);
     }
 }
 
+function renderSelectedCalendarDayDetails(date) {
+    const detailsContainer = document.getElementById('calendar-day-details-content');
+    if (!detailsContainer) return;
+
+    const activityDetails = datedTrainingPlan.find(item => {
+        const itemDate = new Date(item.date);
+        itemDate.setHours(0,0,0,0);
+        const selectedDate = new Date(date);
+        selectedDate.setHours(0,0,0,0);
+        return isSameDay(itemDate, selectedDate);
+    });
+
+    if (activityDetails) {
+        const dayName = activityDetails.date.toLocaleDateString(undefined, { weekday: 'long' });
+        let activityText = activityDetails.activity.replace(/^[^:]+:\s*/, ''); 
+
+        detailsContainer.innerHTML = `
+            <div class="content-card mt-4" id="calendar-day-details-printable-area">
+                <h4 class="text-lg font-semibold text-sky-700 mb-2">Training for ${dayName}, ${formatDate(activityDetails.date)}</h4>
+                <p class="text-stone-700 mb-1"><strong>Activity:</strong> ${activityText}</p>
+                <p class="text-xs text-stone-500 mb-1">Phase: ${activityDetails.phaseName} | Week: ${activityDetails.weekNum}</p>
+                ${activityDetails.notes ? `<p class="text-sm text-stone-600 italic mt-1"><strong>Weekly Notes:</strong> ${activityDetails.notes}</p>` : ''}
+            </div>
+        `;
+    } else {
+        detailsContainer.innerHTML = `
+            <div class="content-card mt-4">
+                <p class="text-stone-600">No training scheduled for ${formatDate(date)}.</p>
+            </div>
+        `;
+    }
+}
+
+
 function renderPaceUtilities() {
-    setActiveNav('nav-utils');
+    setActiveNav('nav-pacer');
     appContent.innerHTML = ''; 
     const paceUtilsSection = document.createElement('section');
     paceUtilsSection.id = "pace-utils-content";
@@ -1018,7 +1274,7 @@ function renderPaceUtilities() {
             <div id="cardiacDriftResultArea" class="mt-6 p-4 rounded-md min-h-[50px] text-center font-medium text-base sm:text-lg result-default">
                 Enter data and click calculate.
             </div>
-            <div id="cardiacDriftAiSection" class="mt-4 text-center">
+            <div id="cardiacDriftAiSection" class="mt-4 text-center hidden">
                 <div id="cardiacDriftAiLoadingIndicator" class="loader hidden mt-3"></div>
                 <div id="cardiacDriftAiResponseArea" class="mt-3 p-4 rounded-md min-h-[60px] text-left text-sm sm:text-base whitespace-pre-wrap hidden"></div>
             </div>
@@ -1167,7 +1423,6 @@ function handleCardiacDriftCalculation() {
 
     if (typeof result === 'number') {
         displayCardiacDriftResult(result);
-        fetchCardiacDriftAiInsights(); 
     } else {
         displayCardiacDriftError(result); 
     }
@@ -1201,15 +1456,44 @@ function displayCardiacDriftResult(driftValue) {
     }
 }
 
-async function fetchCardiacDriftAiInsights() {
-    if (!currentCardiacDriftAiPrompt) return;
-    
-    callGeminiApi(currentCardiacDriftAiPrompt, 'cardiacDriftAiResponseArea', 'cardiacDriftAiLoadingIndicator');
-}
 
 
-// --- Initial Load ---
-fetchMarathonPlan();
+document.addEventListener('DOMContentLoaded', () => {
+    const loginButton = document.getElementById('loginButton');
+    if(loginButton) {
+        loginButton.addEventListener('click', handleLogin);
+    }
+    const userIdInput = document.getElementById('userIdInput');
+    if(userIdInput) {
+        userIdInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleLogin();
+            }
+        });
+    }
+    const lastUserId = localStorage.getItem('lastUserID');
+    const lastWebAppUrl = localStorage.getItem('lastWebAppUrl');
+    if (lastUserId && lastWebAppUrl) {
+        const userIdInputEl = document.getElementById('userIdInput');
+        if (userIdInputEl) userIdInputEl.value = lastUserId;
+        currentWebAppUrl = lastWebAppUrl;
+        loginLoadingMessageDiv.classList.remove('hidden');
+        fetchMarathonPlan(currentWebAppUrl).then(success => {
+            if (success) {
+                initializeApp();
+            } else {
+                loginLoadingMessageDiv.classList.add('hidden');
+                loginContainer.classList.remove('hidden'); 
+                mainAppWrapper.classList.add('hidden');
+            }
+        });
+    } else {
+         loginContainer.classList.remove('hidden');
+         mainAppWrapper.classList.add('hidden');
+    }
+});
+
 </script>
 </body>
 </html>
